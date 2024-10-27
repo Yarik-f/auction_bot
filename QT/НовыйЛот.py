@@ -78,8 +78,6 @@ class Ui_Dialog(object):
         item = self.tableWidget.horizontalHeaderItem(3)
         item.setText(_translate("Dialog", "Время окончания аукциона"))
 
-
-
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
