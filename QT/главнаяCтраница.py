@@ -265,7 +265,7 @@ class Ui_MainWindow(object):
 "товар из списка"))
         self.pushButton_10.setText(_translate("MainWindow", "Очистить весь список"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
-"тавар на торги вновь"))
+"тавар на торги вновь")) 
         
 
     def ИТ(self):
