@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import ИсторияТоргов, УдалениеТовара, ВыставлениеТовара, ПА
+import ИсторияТоргов, УдалениеТовара, ВыставлениеТовара, ПА, НовыйЛот
 import functools
 
 class Ui_MainWindow(object):
@@ -211,6 +211,7 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
         self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 'УТ'))
@@ -270,6 +271,12 @@ class Ui_MainWindow(object):
     def ИТ(self):
         Dialog = QtWidgets.QDialog()
         ui = ИсторияТоргов.Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.exec_()
+    
+    def НЛ(self):
+        Dialog = QtWidgets.QDialog()
+        ui = НовыйЛот.Ui_Dialog()
         ui.setupUi(Dialog)
         Dialog.exec_()
 
