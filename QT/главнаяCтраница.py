@@ -218,7 +218,7 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.ap1()
+        self.Auction()
 
         self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
@@ -276,25 +276,53 @@ class Ui_MainWindow(object):
         self.pushButton_10.setText(_translate("MainWindow", "Очистить весь список"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
 "тавар на торги вновь")) 
-        
-    def ap1(self):
-        # Заполняем выбранную таблицу 
-        dt_now = (datetime.datetime.now())
 
-        with con:
-            NumberColumns = self.tableWidget.columnCount() # Количество столбцов в тоблице   WHERE end_time >= {dt_now}
-            table = con.execute(f"""SELECT end_time FROM Lots
-                                         WHERE end_time >= '{dt_now}'""")
-            table = table.fetchall()
-            print(len(table))
+    # Заполнение таблицы товаров на аукционе     
+    def Auction(self):
+        dt_now = (datetime.datetime.now()) # Определяем текущее время
+
+        with con:  
+            table = con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), end_time FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        INNER JOIN Bids 
+                                            ON Lots.lot_id = Bids.lot_id
+                                         WHERE Lots.end_time >= '{dt_now}'
+                                         GROUP BY Bids.lot_id""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table = table.fetchall() 
+
+            tableNULL = con.execute(f"""SELECT description, image_pt, starting_price, end_time FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        LEFT JOIN Bids 
+                                            ON Bids.lot_id = Lots.lot_id
+                                         WHERE Lots.end_time >= '{dt_now}' AND Bids.lot_id IS NULL
+                                         """)   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            tableNULL = tableNULL.fetchall()
+
+            self.tableWidget.setRowCount(len(table) + len(tableNULL)) # Создаем строки в таблице
+            # Заполняем сталбцы с окончанием торгов и стартовую цену лота 
+            for k in range (len(table)):    
+                self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table[k][0]))) 
+                self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table[k][1])))             
+                self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table[k][2])))
+                self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table[k][3])))
+                self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4]))) 
+
+            for k in range (len(tableNULL)): 
+                self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0]))) 
+                self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))             
+                self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
+                self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
+                self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))           
 
             
-            for k in range (len(table)):                       
-                self.tableWidget.setItem(5, k, QtWidgets.QTableWidgetItem(str(table[k])))
-                print(QtWidgets.QTableWidgetItem(str(table[k])))
 
-            
-            
+
 
     def ИТ(self):
         Dialog = QtWidgets.QDialog()
