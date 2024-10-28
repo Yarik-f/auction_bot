@@ -1,9 +1,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import ИсторияТоргов, УдалениеТовара, ВыставлениеТовара, ПА, НовыйЛот
 import functools
+import sqlite3 as sl
+import datetime
+
+import ИсторияТоргов, УдалениеТовара, ВыставлениеТовара, ПА, НовыйЛот
+
+
+
+con = sl.connect('DataBase\my_database.db')
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, root):
+    def setupUi(self, MainWindow, root=False):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1323, 907)
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
@@ -211,6 +218,8 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        self.ap1()
+
         self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
         self.pushButton_5.setVisible(root)
@@ -268,6 +277,24 @@ class Ui_MainWindow(object):
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
 "тавар на торги вновь")) 
         
+    def ap1(self):
+        # Заполняем выбранную таблицу 
+        dt_now = (datetime.datetime.now())
+
+        with con:
+            NumberColumns = self.tableWidget.columnCount() # Количество столбцов в тоблице   WHERE end_time >= {dt_now}
+            table = con.execute(f"""SELECT end_time FROM Lots
+                                         WHERE end_time >= '{dt_now}'""")
+            table = table.fetchall()
+            print(len(table))
+
+            
+            for k in range (len(table)):                       
+                self.tableWidget.setItem(5, k, QtWidgets.QTableWidgetItem(str(table[k])))
+                print(QtWidgets.QTableWidgetItem(str(table[k])))
+
+            
+            
 
     def ИТ(self):
         Dialog = QtWidgets.QDialog()
