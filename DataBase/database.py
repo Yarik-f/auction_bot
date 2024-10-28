@@ -1,6 +1,6 @@
 import sqlite3 as sql
 import os
-from data import data
+
 
 class Database:
     def __init__(self, path):
@@ -127,7 +127,6 @@ class Database:
                 FOREIGN KEY (buyer_id) REFERENCES users(user_id)
                 )
                 ''')
-
     def get_data(self, table, name_table, data):
         for item in data[name_table]:
             self.con.execute(table, item)
@@ -156,7 +155,6 @@ class Database:
         self.get_data(sql_insert_strikes, 'strikes', data)
         self.get_data(sql_insert_transfer_documents, 'transfer_documents', data)
         self.con.commit()
-
     def clear_data(self):
         with self.con:
             self.con.execute("DELETE FROM Roles")
@@ -187,10 +185,109 @@ class Database:
         self.con.commit()
 
 
+    def get_table_data(self, table_name):
+        data = self.con.execute(f'''SELECT * FROM {table_name}''')
+        data = data.fetchall()
+        return data
+
+
 db = Database('my_database.db')
+
+data_db = {
+    "roles": [
+        ("user", '{"create_bid": true, "view_lots": true}'),
+        ("admin", '{"create_lot": true, "view_all_lots": true, "manage_bids": true}'),
+        ("root", '{"manage_users": true, "manage_admins": true, "view_all_finances": true}'),
+    ],
+    "users": [
+        ("ivanov", 1, 1000.50, 5, 0, 0),
+        ("petrov", 1, 2000.00, 2, 1, 0),
+        ("sidorov", 1, 1500.75, 3, 0, 0),
+        ("fedorov", 1, 500.25, 1, 1, 0),
+        ("kuznetsov", 1, 1200.00, 4, 0, 0),
+        ("ivanova", 1, 3000.00, 6, 1, 0),
+        ("petrova", 1, 800.80, 0, 0, 0),
+    ],
+    "admins": [
+        ("admin1", "12345678", 0, 2, 5.0, 2),
+        ("admin", "root", 850, 3, 2.0, 0),
+    ],
+    "products": [
+        ("Картина", "Красивая картина маслом.", 1500.00, 1),
+        ("Часы", "Стильные наручные часы.", 750.50, 5),
+        ("Серебряная ложка", "Ложка из чистого серебра.", 250.00, 10),
+        ("Статуэтка", "Статуэтка ручной работы.", 300.00, 2),
+        ("Книга", "Редкое издание книги.", 500.00, 3),
+        ("Монета", "Антикварная монета.", 1200.00, 1),
+        ("Ваза", "Стеклянная ваза ручной работы.", 400.00, 4),
+    ],
+    "product_images": [
+        ('tg1', "http://example.com/images/painting.jpg", 1),
+        ('tg2', "http://example.com/images/watches.jpg", 2),
+        ('tg3', "http://example.com/images/spoon.jpg", 3),
+        ('tg4', "http://example.com/images/statue.jpg", 4),
+        ('tg5', "http://example.com/images/book.jpg", 5),
+        ('tg6', "http://example.com/images/coin.jpg", 6),
+        ('tg7', "http://example.com/images/vase.jpg", 7),
+    ],
+    "lots": [
+        (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
+        (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "в процессе"),
+        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
+        (4, 300.00, 4, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
+        (5, 500.00, 5, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
+        (6, 1200.00, 6, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
+        (7, 400.00, 7, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
+    ],
+    "bids": [
+        (1, 1, 1550.00),
+        (1, 2, 1600.00),
+        (2, 3, 800.00),
+        (3, 4, 260.00),
+        (4, 5, 310.00),
+        (5, 6, 550.00),
+        (6, 7, 1300.00),
+    ],
+    "auction_history": [
+        (1, 2, 1600.00),
+        (2, 3, 850.00),
+        (3, 4, 280.00),
+        (4, 5, 350.00),
+        (5, 6, 600.00),
+        (6, 7, 1350.00),
+        (7, 1, 420.00),
+    ],
+    "complaints_strikes": [
+        (1, 1, "Проблема с ответами", "в ожидании", 0),
+        (2, 1, "Неудовлетворительное обслуживание", "в ожидании", 0),
+        (3, 2, "Игнорирование вопросов", "в ожидании", 0),
+        (4, 2, "Запоздалые ответы", "в ожидании", 0),
+        (5, 3, "Неправильная информация", "в ожидании", 0),
+        (6, 3, "Недостаток помощи", "в ожидании", 0),
+        (7, 1, "Проблема с оплатой", "в ожидании", 0),
+    ],
+    "strikes": [
+        (1, 1, "Несоблюдение правил"),
+        (2, 1, "Проблема с оплатой"),
+        (3, 2, "Нарушение условий аукциона"),
+        (4, 2, "Некорректное поведение"),
+        (5, 1, "Нарушение тайны торгов"),
+        (6, 1, "Отсутствие уважения к другим"),
+        (7, 2, "Задержка с подачей заявок"),
+    ],
+    "transfer_documents": [
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 1),
+    ]
+}
 
 
 # db.clear_data()
 # db.delete_table()
 # db.create_table()
-# db.fill_table(data)
+# db.fill_table(data_db)
