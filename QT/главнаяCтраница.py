@@ -3,7 +3,7 @@ import ИсторияТоргов, УдалениеТовара, Выставл�
 import functools
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow, root):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1323, 907)
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
@@ -213,6 +213,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
+        self.pushButton_5.setVisible(root)
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
         self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 'УТ'))
         self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'ВТ'))

@@ -56,23 +56,27 @@ class Ui_Dialog(object):
 
     def check_login(self):
         login = False
+        root = False
         username = self.input_username.text()
         password = self.input_password.text()
         data = db.get_table_data('Admins')
         for i in range(0, len(data)):
             if username == data[i][1] and password == data[i][2]:
+                if data[i][4] == 3:
+                    root = True
                 login = True
                 break
         if login:
-            self.open_main_window()
+            print(root)
+            self.open_main_window(root)
         else:
             QMessageBox.warning(None, 'Error', 'Incorrect Username or Password')
 
 
-    def open_main_window(self):
+    def open_main_window(self, root):
         self.main_window = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
-        self.ui.setupUi(self.main_window)
+        self.ui.setupUi(self.main_window, root)
         self.main_window.show()
         self.Dialog.close()
 
