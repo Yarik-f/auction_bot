@@ -7,10 +7,10 @@ import ИсторияТоргов, УдалениеТовара, Выставл�
 
 
 
-con = sl.connect('DataBase\my_database.db')
+con = sl.connect('QT\DataBase\my_database.db')
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, root=False):
+    def setupUi(self, MainWindow, root=True):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1323, 907)
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
@@ -87,7 +87,7 @@ class Ui_MainWindow(object):
         self.label_4.setTabletTracking(False)
         self.label_4.setObjectName("label_4")
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
-        self.tableWidget.setGeometry(QtCore.QRect(170, 220, 801, 241))
+        self.tableWidget.setGeometry(QtCore.QRect(100, 220, 1100, 250))
         font = QtGui.QFont()
         font.setBold(False)
         font.setItalic(False)
@@ -97,28 +97,16 @@ class Ui_MainWindow(object):
         font.setKerning(True)
         font.setStyleStrategy(QtGui.QFont.PreferDefault)
         self.tableWidget.setFont(font)
-        self.tableWidget.setMouseTracking(False)
-        self.tableWidget.setTabletTracking(False)
         self.tableWidget.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.tableWidget.setAcceptDrops(False)
-        self.tableWidget.setToolTip("")
         self.tableWidget.setToolTipDuration(-1)
-        self.tableWidget.setStatusTip("")
-        self.tableWidget.setWhatsThis("")
-        self.tableWidget.setAccessibleName("")
-        self.tableWidget.setAccessibleDescription("")
         self.tableWidget.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.tableWidget.setAutoFillBackground(False)
-        self.tableWidget.setStyleSheet("")
         self.tableWidget.setFrameShape(QtWidgets.QFrame.Box)
         self.tableWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.tableWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.tableWidget.setAutoScrollMargin(16)
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.AnyKeyPressed|QtWidgets.QAbstractItemView.DoubleClicked|QtWidgets.QAbstractItemView.EditKeyPressed)
-        self.tableWidget.setDragEnabled(False)
         self.tableWidget.setDefaultDropAction(QtCore.Qt.IgnoreAction)
-        self.tableWidget.setAlternatingRowColors(False)
         self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
         self.tableWidget.setTextElideMode(QtCore.Qt.ElideRight)
@@ -219,6 +207,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.Auction()
+        self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
 
         self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
@@ -282,6 +271,10 @@ class Ui_MainWindow(object):
         dt_now = (datetime.datetime.now()) # Определяем текущее время
 
         with con:  
+            #con.execute(f"""UPDATE Lots
+                                #SET status = 'продан'
+                                #WHERE lot_id = 3""")
+
             table = con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), end_time FROM Lots
                                         INNER JOIN Products 
                                             ON Lots.product_id = Products.product_id
@@ -318,7 +311,38 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))             
                 self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
                 self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
-                self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))           
+                self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3]))) 
+
+
+            table1 = con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username FROM Auction_history
+                                     INNER JOIN Lots 
+                                        ON Auction_history.lot_id = Lots.product_id
+                                     INNER JOIN Products 
+                                        ON Lots.product_id = Products.product_id
+                                     INNER JOIN Product_images 
+                                        ON Lots.product_id = Product_images.product_id
+                                     INNER JOIN Users 
+                                        ON Auction_history.winner_id = Users.user_id
+                                     WHERE Lots.end_time < '{dt_now}'""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table1 = table1.fetchall() 
+
+            self.tableWidget_2.setRowCount(len(table1)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота 
+            for k in range (len(table1)):    
+                self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
+                self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
+                self.tableWidget_2.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table1[k][2])))
+                self.tableWidget_2.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table1[k][3]))) 
+                self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
+                self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
+                self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem('оплачено (?????????)'))
+
+    # Блокируем изменения ячейки       
+    def EditingBlock(self):
+        it = QtWidgets.QTableWidgetItem(self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn()).text()) 
+        it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+        self.tableWidget.setItem(self.tableWidget.currentRow(), self.tableWidget.currentColumn(), it)
+        
+                          
 
             
 
