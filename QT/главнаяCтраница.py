@@ -3,7 +3,7 @@ import functools
 import sqlite3 as sl
 import datetime
 
-import ИсторияТоргов, УдалениеТовара, ВыставлениеТовара, ПА, НовыйЛот
+import ИсторияТоргов, УдалениеТовара, ВыставлениеТовара, ПА, НовыйЛот, products_window
 
 
 
@@ -211,6 +211,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
+        self.pushButton_4.clicked.connect(functools.partial(self.products_window))
         self.pushButton_5.setVisible(root)
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
         self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 'УТ'))
@@ -226,7 +227,7 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Редактировать данные"))
         self.pushButton_2.setText(_translate("MainWindow", "Создать новый лот"))
         self.pushButton_3.setText(_translate("MainWindow", "Просмотр истории торгов"))
-        self.pushButton_4.setText(_translate("MainWindow", "Перейти в кабинет пользователя"))
+        self.pushButton_4.setText(_translate("MainWindow", "Товары"))
         self.pushButton_5.setText(_translate("MainWindow", "Пользователи/Админы"))
         self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Баланс</span></p></body></html>"))
         self.pushButton_6.setText(_translate("MainWindow", "Пополнения баланса"))
@@ -364,6 +365,14 @@ class Ui_MainWindow(object):
         Dialog = QtWidgets.QDialog()
         ui = ПА.Ui_Dialog()
         ui.setupUi(Dialog)
+        ui.fill_admin_table()
+        ui.fill_user_table()
+        Dialog.exec_()
+    def products_window(self):
+        Dialog = QtWidgets.QDialog()
+        ui = products_window.Ui_Dialog()
+        ui.setupUi(Dialog)
+        ui.fill_product_table()
         Dialog.exec_()
 
     def Confirmation(self, n):
