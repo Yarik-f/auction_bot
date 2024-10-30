@@ -1,7 +1,5 @@
 import telebot
 from telebot import types
-from pycoingecko import CoinGeckoAPI
-cg = CoinGeckoAPI()
 from py_currency_converter import convert
 from _datetime import datetime
 
