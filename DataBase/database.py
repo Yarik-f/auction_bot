@@ -1,6 +1,7 @@
 import sqlite3 as sql
 import os
 from PyQt5 import QtCore
+import datetime
 
 def item_is_not_editable(table):
     for i in range(table.rowCount()):
@@ -8,7 +9,6 @@ def item_is_not_editable(table):
             item = table.item(i, j)
             if item:
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-
 
 class Database:
     def __init__(self, path):
@@ -223,6 +223,49 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+    
+    # Заполнение таблицы товаров на аукционе     
+    def Auction(self):
+        dt_now = (datetime.datetime.now()) # Определяем текущее время
+
+            #con.execute(f"""UPDATE Lots
+                                #SET status = 'продан'
+                                #WHERE lot_id = 3""")
+
+        table = self.con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), end_time FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        INNER JOIN Bids 
+                                            ON Lots.lot_id = Bids.lot_id
+                                         WHERE Lots.end_time >= '{dt_now}'
+                                         GROUP BY Bids.lot_id""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        table = table.fetchall() 
+
+        tableNULL = self.con.execute(f"""SELECT description, image_pt, starting_price, end_time FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        LEFT JOIN Bids 
+                                            ON Bids.lot_id = Lots.lot_id
+                                         WHERE Lots.end_time >= '{dt_now}' AND Bids.lot_id IS NULL
+                                         """)   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        tableNULL = tableNULL.fetchall()
+
+        table1 = self.con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username FROM Auction_history
+                                     INNER JOIN Lots 
+                                        ON Auction_history.lot_id = Lots.product_id
+                                     INNER JOIN Products 
+                                        ON Lots.product_id = Products.product_id
+                                     INNER JOIN Product_images 
+                                        ON Lots.product_id = Product_images.product_id
+                                     INNER JOIN Users 
+                                        ON Auction_history.winner_id = Users.user_id
+                                     WHERE Lots.end_time < '{dt_now}'""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        table1 = table1.fetchall() 
+        return [table, tableNULL, table1]
 
 db = Database('my_database.db')
 

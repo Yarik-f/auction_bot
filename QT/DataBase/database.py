@@ -1,5 +1,14 @@
 import sqlite3 as sql
 import os
+from PyQt5 import QtCore
+import datetime
+
+def item_is_not_editable(table):
+    for i in range(table.rowCount()):
+        for j in range(table.columnCount()):
+            item = table.item(i, j)
+            if item:
+                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
 
 
 class Database:
@@ -47,7 +56,8 @@ class Database:
                 title VARCHAR(100) NOT NULL,
                 description TEXT,
                 price DECIMAL NOT NULL,
-                quantity INTEGER NOT NULL
+                quantity INTEGER NOT NULL,
+                location VARCHAR(50) NOT NULL
                 )
                 ''')
             self.con.execute('''
@@ -134,7 +144,7 @@ class Database:
         sql_insert_roles = "INSERT INTO roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
         sql_insert_admins = "INSERT INTO admins (username, password, balance, role_id, commission_rate, penalties) values(?, ?, ?, ?, ?, ?)"
-        sql_insert_products = "INSERT INTO products (title, description, price, quantity) values(?, ?, ?, ?)"
+        sql_insert_products = "INSERT INTO products (title, description, price, quantity, location) values(?, ?, ?, ?, ?)"
         sql_insert_product_images = "INSERT INTO product_images (image_tg, image_pt, product_id) values(?, ?, ?)"
         sql_insert_lots = "INSERT INTO lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
         sql_insert_bids = "INSERT INTO bids (lot_id, user_id, bid_amount) values(?, ?, ?)"
@@ -184,11 +194,80 @@ class Database:
             self.con.execute("DROP TABLE IF EXISTS Transfer_documents")
         self.con.commit()
 
-
     def get_table_data(self, table_name):
         data = self.con.execute(f'''SELECT * FROM {table_name}''')
         data = data.fetchall()
         return data
+
+
+    def get_user_data(self):
+        data = self.con.execute('''
+            SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
+            FROM Users u
+            JOIN Roles r ON u.role_id = r.role_id
+            
+        ''')
+        data = data.fetchall()
+        return data
+    def get_admin_data(self):
+        data = self.con.execute('''
+            SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
+            FROM Admins a
+            JOIN Roles r ON a.role_id = r.role_id
+        ''')
+        data = data.fetchall()
+        return data
+    def get_product_data(self):
+        data = self.con.execute('''
+            SELECT p.title, p.description, p.price, p.quantity, p.location
+            FROM Products p
+        ''')
+        data = data.fetchall()
+        return data
+    
+
+    # Заполнение таблицы товаров на аукционе     
+    def Auction(self):
+        dt_now = (datetime.datetime.now()) # Определяем текущее время
+
+            #con.execute(f"""UPDATE Lots
+                                #SET status = 'продан'
+                                #WHERE lot_id = 3""")
+
+        table = self.con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), end_time FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        INNER JOIN Bids 
+                                            ON Lots.lot_id = Bids.lot_id
+                                         WHERE Lots.end_time >= '{dt_now}'
+                                         GROUP BY Bids.lot_id""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        table = table.fetchall() 
+
+        tableNULL = self.con.execute(f"""SELECT description, image_pt, starting_price, end_time FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        LEFT JOIN Bids 
+                                            ON Bids.lot_id = Lots.lot_id
+                                         WHERE Lots.end_time >= '{dt_now}' AND Bids.lot_id IS NULL
+                                         """)   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        tableNULL = tableNULL.fetchall()
+
+        table1 = self.con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username FROM Auction_history
+                                     INNER JOIN Lots 
+                                        ON Auction_history.lot_id = Lots.product_id
+                                     INNER JOIN Products 
+                                        ON Lots.product_id = Products.product_id
+                                     INNER JOIN Product_images 
+                                        ON Lots.product_id = Product_images.product_id
+                                     INNER JOIN Users 
+                                        ON Auction_history.winner_id = Users.user_id
+                                     WHERE Lots.end_time < '{dt_now}'""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        table1 = table1.fetchall() 
+        return [table, tableNULL, table1]
 
 
 db = Database('my_database.db')
@@ -213,13 +292,13 @@ data_db = {
         ("admin", "root", 850, 3, 2.0, 0),
     ],
     "products": [
-        ("Картина", "Красивая картина маслом.", 1500.00, 1),
-        ("Часы", "Стильные наручные часы.", 750.50, 5),
-        ("Серебряная ложка", "Ложка из чистого серебра.", 250.00, 10),
-        ("Статуэтка", "Статуэтка ручной работы.", 300.00, 2),
-        ("Книга", "Редкое издание книги.", 500.00, 3),
-        ("Монета", "Антикварная монета.", 1200.00, 1),
-        ("Ваза", "Стеклянная ваза ручной работы.", 400.00, 4),
+        ("Картина", "Красивая картина маслом.", 1500.00, 1, 'Moscow'),
+        ("Часы", "Стильные наручные часы.", 750.50, 5, 'Minsk'),
+        ("Серебряная ложка", "Ложка из чистого серебра.", 250.00, 10, 'Vitebsk'),
+        ("Статуэтка", "Статуэтка ручной работы.", 300.00, 2, 'Grodno'),
+        ("Книга", "Редкое издание книги.", 500.00, 3, 'Praga'),
+        ("Монета", "Антикварная монета.", 1200.00, 1, 'Berlin'),
+        ("Ваза", "Стеклянная ваза ручной работы.", 400.00, 4, 'Moscow'),
     ],
     "product_images": [
         ('tg1', "http://example.com/images/painting.jpg", 1),
@@ -233,7 +312,7 @@ data_db = {
     "lots": [
         (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
         (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "в процессе"),
-        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-10-29 10:00:00", "Стандартный", "в процессе"),
+        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-11-29 10:00:00", "Стандартный", "в процессе"),
         (4, 300.00, 4, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
         (5, 500.00, 5, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
         (6, 1200.00, 6, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
@@ -286,8 +365,8 @@ data_db = {
     ]
 }
 
+db.clear_data()
+db.delete_table()
+db.create_table()
+db.fill_table(data_db)
 
-# db.clear_data()
-# db.delete_table()
-# db.create_table()
-# db.fill_table(data_db)
