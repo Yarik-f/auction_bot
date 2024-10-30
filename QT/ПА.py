@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QTableWidgetItem
 
+from DataBase.database import db, item_is_not_editable
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -8,97 +10,37 @@ class Ui_Dialog(object):
         self.tableWidget = QtWidgets.QTableWidget(Dialog)
         self.tableWidget.setGeometry(QtCore.QRect(70, 70, 981, 231))
         self.tableWidget.setObjectName("tableWidget")
-        self.tableWidget.setColumnCount(7)
+        self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(4, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(5, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget.setHorizontalHeaderItem(6, item)
         self.tableWidget_2 = QtWidgets.QTableWidget(Dialog)
         self.tableWidget_2.setGeometry(QtCore.QRect(80, 400, 981, 231))
         self.tableWidget_2.setObjectName("tableWidget_2")
-        self.tableWidget_2.setColumnCount(5)
+        self.tableWidget_2.setColumnCount(0)
         self.tableWidget_2.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget_2.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget_2.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget_2.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget_2.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        item.setFont(font)
-        self.tableWidget_2.setHorizontalHeaderItem(4, item)
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setGeometry(QtCore.QRect(530, 25, 151, 31))
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(12)
         self.label.setFont(font)
         self.label.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setGeometry(QtCore.QRect(530, 350, 161, 31))
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(12)
         self.label_2.setFont(font)
         self.label_2.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.label_2.setObjectName("label_2")
         self.pushButton = QtWidgets.QPushButton(Dialog)
         self.pushButton.setGeometry(QtCore.QRect(180, 320, 121, 23))
         font = QtGui.QFont()
-        font.setPointSize(14)
+        font.setPointSize(10)
         self.pushButton.setFont(font)
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(Dialog)
         self.pushButton_2.setGeometry(QtCore.QRect(160, 660, 111, 23))
         font = QtGui.QFont()
-        font.setPointSize(14)
+        font.setPointSize(10)
         self.pushButton_2.setFont(font)
         self.pushButton_2.setObjectName("pushButton_2")
 
@@ -108,34 +50,55 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        item = self.tableWidget.horizontalHeaderItem(0)
-        item.setText(_translate("Dialog", "Username"))
-        item = self.tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("Dialog", "New Column"))
-        item = self.tableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("Dialog", "Role_id"))
-        item = self.tableWidget.horizontalHeaderItem(3)
-        item.setText(_translate("Dialog", "New Column"))
-        item = self.tableWidget.horizontalHeaderItem(4)
-        item.setText(_translate("Dialog", "Successeful"))
-        item = self.tableWidget.horizontalHeaderItem(5)
-        item.setText(_translate("Dialog", "Successeful_bids"))
-        item = self.tableWidget.horizontalHeaderItem(6)
-        item.setText(_translate("Dialog", "is_baner"))
-        item = self.tableWidget_2.horizontalHeaderItem(0)
-        item.setText(_translate("Dialog", "New Column"))
-        item = self.tableWidget_2.horizontalHeaderItem(1)
-        item.setText(_translate("Dialog", "Username"))
-        item = self.tableWidget_2.horizontalHeaderItem(2)
-        item.setText(_translate("Dialog", "Password"))
-        item = self.tableWidget_2.horizontalHeaderItem(3)
-        item.setText(_translate("Dialog", "Role_id"))
-        item = self.tableWidget_2.horizontalHeaderItem(4)
-        item.setText(_translate("Dialog", "Penalties"))
         self.label.setText(_translate("Dialog", "Пользователь"))
         self.label_2.setText(_translate("Dialog", "Администратор"))
         self.pushButton.setText(_translate("Dialog", "Сохранить"))
         self.pushButton_2.setText(_translate("Dialog", "Сохранить"))
+
+
+
+    def fill_user_table(self):
+        users = db.get_user_data()
+
+        self.tableWidget.setRowCount(len(users))
+
+        table_column = ["Телеграм пользователя", "Роль", "Баланс", "Кол. Успеш. ставок", "Авто. ставка", "Бан"]
+
+        self.tableWidget.setColumnCount(len(table_column))
+        self.tableWidget.setHorizontalHeaderLabels(table_column)
+
+        for i, user in enumerate(users):
+            for j, value in enumerate(user):
+                if j == 4 or j == 5:
+                    if value == 0:
+                        self.tableWidget.setItem(i, j, QTableWidgetItem('Нет'))
+                    else:
+                        self.tableWidget.setItem(i, j, QTableWidgetItem('Да'))
+                else:
+                    self.tableWidget.setItem(i, j, QTableWidgetItem(str(value)))
+
+        item_is_not_editable(self.tableWidget)
+
+        self.tableWidget.resizeColumnToContents(0)
+        self.tableWidget.resizeColumnToContents(3)
+
+    def fill_admin_table(self):
+        admins = db.get_admin_data()
+
+        self.tableWidget_2.setRowCount(len(admins))
+
+        table_column = ["Телеграм админа", 'Пароль', "Роль", "Баланс", "Коммисия", "Страйки"]
+
+        self.tableWidget_2.setColumnCount(len(table_column))
+        self.tableWidget_2.setHorizontalHeaderLabels(table_column)
+
+        for i, admin in enumerate(admins):
+            for j, value in enumerate(admin):
+                self.tableWidget_2.setItem(i, j, QTableWidgetItem(str(value)))
+
+        item_is_not_editable(self.tableWidget_2)
+
+        self.tableWidget_2.resizeColumnToContents(0)
 
 
 if __name__ == "__main__":
@@ -144,5 +107,7 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
+    ui.fill_admin_table()
+    ui.fill_user_table()
     Dialog.show()
     sys.exit(app.exec_())
