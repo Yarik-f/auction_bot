@@ -373,5 +373,5 @@ data_db = {
 
 # db.clear_data()
 # db.delete_table()
-db.create_table()
-db.fill_table(data_db)
+# db.create_table()
+# db.fill_table(data_db)
