@@ -3,6 +3,9 @@ import os
 from PyQt5 import QtCore
 import datetime
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(script_dir, 'my_database.db')
+
 def item_is_not_editable(table):
     for i in range(table.rowCount()):
         for j in range(table.columnCount()):
@@ -10,12 +13,10 @@ def item_is_not_editable(table):
             if item:
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
 
-
 class Database:
-    def __init__(self, path):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.path = os.path.join(script_dir, path)
-        self.con = sql.connect(self.path)
+    def __init__(self):
+        
+        self.con = sql.connect(db_path)
 
     def create_table(self):
         with self.con:
@@ -198,8 +199,6 @@ class Database:
         data = self.con.execute(f'''SELECT * FROM {table_name}''')
         data = data.fetchall()
         return data
-
-
     def get_user_data(self):
         data = self.con.execute('''
             SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
@@ -225,7 +224,6 @@ class Database:
         data = data.fetchall()
         return data
     
-
     # Заполнение таблицы товаров на аукционе     
     def Auction(self):
         dt_now = (datetime.datetime.now()) # Определяем текущее время
@@ -269,8 +267,7 @@ class Database:
         table1 = table1.fetchall() 
         return [table, tableNULL, table1]
 
-
-db = Database('my_database.db')
+db = Database()
 
 data_db = {
     "roles": [
@@ -312,7 +309,7 @@ data_db = {
     "lots": [
         (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
         (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "в процессе"),
-        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-11-29 10:00:00", "Стандартный", "в процессе"),
+        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-10-29 10:00:00", "Стандартный", "в процессе"),
         (4, 300.00, 4, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
         (5, 500.00, 5, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
         (6, 1200.00, 6, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
@@ -365,8 +362,7 @@ data_db = {
     ]
 }
 
-db.clear_data()
-db.delete_table()
-db.create_table()
-db.fill_table(data_db)
-
+# db.clear_data()
+# db.delete_table()
+# db.create_table()
+# db.fill_table(data_db)
