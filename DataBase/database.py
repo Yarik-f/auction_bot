@@ -3,6 +3,10 @@ import os
 from PyQt5 import QtCore
 import datetime
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(script_dir, 'my_database.db')
+
+
 def item_is_not_editable(table):
     for i in range(table.rowCount()):
         for j in range(table.columnCount()):
@@ -10,11 +14,10 @@ def item_is_not_editable(table):
             if item:
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
 
+
 class Database:
-    def __init__(self, path):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.path = os.path.join(script_dir, path)
-        self.con = sql.connect(self.path)
+    def __init__(self):
+        self.con = sql.connect(db_path)
 
     def create_table(self):
         with self.con:
@@ -136,9 +139,11 @@ class Database:
                 FOREIGN KEY (buyer_id) REFERENCES users(user_id)
                 )
                 ''')
+
     def get_data(self, table, name_table, data):
         for item in data[name_table]:
             self.con.execute(table, item)
+
     def fill_table(self, data):
         sql_insert_roles = "INSERT INTO roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
@@ -164,6 +169,7 @@ class Database:
         self.get_data(sql_insert_strikes, 'strikes', data)
         self.get_data(sql_insert_transfer_documents, 'transfer_documents', data)
         self.con.commit()
+
     def clear_data(self):
         with self.con:
             self.con.execute("DELETE FROM Roles")
@@ -178,6 +184,7 @@ class Database:
             self.con.execute("DELETE FROM Strikes")
             self.con.execute("DELETE FROM Transfer_documents")
         self.con.commit()
+
     def delete_table(self):
         with self.con:
             self.con.execute("DROP TABLE IF EXISTS Roles")
@@ -198,16 +205,16 @@ class Database:
         data = data.fetchall()
         return data
 
-
     def get_user_data(self):
         data = self.con.execute('''
             SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
             FROM Users u
             JOIN Roles r ON u.role_id = r.role_id
-            
+
         ''')
         data = data.fetchall()
         return data
+
     def get_admin_data(self):
         data = self.con.execute('''
             SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
@@ -216,6 +223,7 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_product_data(self):
         data = self.con.execute('''
             SELECT p.title, p.description, p.price, p.quantity, p.location
@@ -223,14 +231,14 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-    
-    # Заполнение таблицы товаров на аукционе     
-    def Auction(self):
-        dt_now = (datetime.datetime.now()) # Определяем текущее время
 
-            #con.execute(f"""UPDATE Lots
-                                #SET status = 'продан'
-                                #WHERE lot_id = 3""")
+    # Заполнение таблицы товаров на аукционе
+    def Auction(self):
+        dt_now = (datetime.datetime.now())  # Определяем текущее время
+
+        # con.execute(f"""UPDATE Lots
+        # SET status = 'продан'
+        # WHERE lot_id = 3""")
 
         table = self.con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), end_time FROM Lots
                                         INNER JOIN Products 
@@ -240,8 +248,8 @@ class Database:
                                         INNER JOIN Bids 
                                             ON Lots.lot_id = Bids.lot_id
                                          WHERE Lots.end_time >= '{dt_now}'
-                                         GROUP BY Bids.lot_id""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-        table = table.fetchall() 
+                                         GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        table = table.fetchall()
 
         tableNULL = self.con.execute(f"""SELECT description, image_pt, starting_price, end_time FROM Lots
                                         INNER JOIN Products 
@@ -251,7 +259,7 @@ class Database:
                                         LEFT JOIN Bids 
                                             ON Bids.lot_id = Lots.lot_id
                                          WHERE Lots.end_time >= '{dt_now}' AND Bids.lot_id IS NULL
-                                         """)   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+                                         """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
         tableNULL = tableNULL.fetchall()
 
         table1 = self.con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username FROM Auction_history
@@ -263,11 +271,12 @@ class Database:
                                         ON Lots.product_id = Product_images.product_id
                                      INNER JOIN Users 
                                         ON Auction_history.winner_id = Users.user_id
-                                     WHERE Lots.end_time < '{dt_now}'""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-        table1 = table1.fetchall() 
+                                     WHERE Lots.end_time < '{dt_now}'""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+        table1 = table1.fetchall()
         return [table, tableNULL, table1]
 
-db = Database('my_database.db')
+
+db = Database()
 
 data_db = {
     "roles": [
@@ -309,11 +318,11 @@ data_db = {
     "lots": [
         (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
         (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "в процессе"),
-        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-10-29 10:00:00", "Стандартный", "в процессе"),
-        (4, 300.00, 4, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
-        (5, 500.00, 5, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
+        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-11-29 10:00:00", "Стандартный", "в процессе"),
+        (4, 300.00, 4, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Историч ценный", "в процессе"),
+        (5, 500.00, 5, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "в процессе"),
         (6, 1200.00, 6, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
-        (7, 400.00, 7, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
+        (7, 400.00, 7, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "в процессе"),
     ],
     "bids": [
         (1, 1, 1550.00),

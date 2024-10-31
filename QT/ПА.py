@@ -1,7 +1,17 @@
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem
+import sys
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+sys.path.append(project_root)
+
 
 from DataBase.database import db, item_is_not_editable
+
+
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):

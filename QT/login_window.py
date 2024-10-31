@@ -1,9 +1,13 @@
-from DataBase.database import db
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
+import sys
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+sys.path.append(project_root)
+from DataBase.database import db
 
-
-from главнаяCтраница import Ui_MainWindow
+from main_window import Ui_MainWindow
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -77,6 +81,7 @@ class Ui_Dialog(object):
         self.main_window = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_window, root)
+        self.ui.auction()
         self.main_window.show()
         self.Dialog.close()
 
