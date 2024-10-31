@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem
 
 
-from Database.database import db, item_is_not_editable
+from DataBase.database import db, item_is_not_editable
 
 
 

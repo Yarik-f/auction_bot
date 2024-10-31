@@ -3,7 +3,7 @@ import functools
 import sqlite3 as sl
 import datetime
 
-#from Database.database import db
+from DataBase.database import db
 
 import ИсторияТоргов, УдалениеТовара, ПА, НовыйЛот, products_window
 
@@ -383,11 +383,11 @@ class Ui_MainWindow(object):
             ui = УдалениеТовара.Ui_Dialog()
             ui.setupUi(Dialog)
             Dialog.exec_()
-        elif n == 'ВТ':
-            Dialog = QtWidgets.QDialog()
-            ui = ВыставлениеТовара.Ui_Dialog()
-            ui.setupUi(Dialog)
-            Dialog.exec_()
+        # elif n == 'ВТ':
+        #     Dialog = QtWidgets.QDialog()
+        #     ui = ВыставлениеТовара.Ui_Dialog()
+        #     ui.setupUi(Dialog)
+        #     Dialog.exec_()
 
 if __name__ == "__main__":
     import sys
