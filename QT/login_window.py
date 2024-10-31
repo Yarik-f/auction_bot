@@ -81,6 +81,7 @@ class Ui_Dialog(object):
         self.main_window = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_window, root)
+        self.ui.auction()
         self.main_window.show()
         self.Dialog.close()
 

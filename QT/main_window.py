@@ -1,13 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import functools
 import sqlite3 as sl
-import datetime
-
-from DataBase.database import db
 
 import ИсторияТоргов, УдалениеТовара, ПА, НовыйЛот, products_window
-
-
+from DataBase.database import db
 
 
 
@@ -17,7 +13,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(1323, 907)
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         MainWindow.setIconSize(QtCore.QSize(50, 50))
-        MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
+        MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowTabbedDocks | QtWidgets.QMainWindow.AnimatedDocks)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(self.centralwidget)
@@ -107,7 +103,8 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.tableWidget.setAutoScrollMargin(16)
-        self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.AnyKeyPressed|QtWidgets.QAbstractItemView.DoubleClicked|QtWidgets.QAbstractItemView.EditKeyPressed)
+        self.tableWidget.setEditTriggers(
+            QtWidgets.QAbstractItemView.AnyKeyPressed | QtWidgets.QAbstractItemView.DoubleClicked | QtWidgets.QAbstractItemView.EditKeyPressed)
         self.tableWidget.setDefaultDropAction(QtCore.Qt.IgnoreAction)
         self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
@@ -208,16 +205,21 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        # self.Auction()
-        # self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
+        self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
 
         self.pushButton_2.clicked.connect(functools.partial(self.НЛ))
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
         self.pushButton_4.clicked.connect(functools.partial(self.products_window))
         self.pushButton_5.setVisible(root)
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
-        self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 'УТ'))
-        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'ВТ'))
+        self.pushButton_8.clicked.connect(functools.partial(self.Confirmation,
+                                                            'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )'))
+        self.pushButton_9.clicked.connect(
+            functools.partial(self.Confirmation, 'Вы действительно хотите удалить данный товар из списка'))
+        self.pushButton_10.clicked.connect(functools.partial(self.Confirmation,
+                                                             'Вы действительно хотите удалить все товары которые не участвуют на аукционе ?'))
+        self.pushButton_11.clicked.connect(
+            functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?'))
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -225,17 +227,21 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Данные администратора</span></p></body></html>"))
+        self.label.setText(_translate("MainWindow",
+                                      "<html><head/><body><p><span style=\" font-size:14pt;\">Данные администратора</span></p></body></html>"))
         self.pushButton.setText(_translate("MainWindow", "Редактировать данные"))
         self.pushButton_2.setText(_translate("MainWindow", "Создать новый лот"))
         self.pushButton_3.setText(_translate("MainWindow", "Просмотр истории торгов"))
         self.pushButton_4.setText(_translate("MainWindow", "Товары"))
         self.pushButton_5.setText(_translate("MainWindow", "Пользователи/Админы"))
-        self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Баланс</span></p></body></html>"))
+        self.label_2.setText(_translate("MainWindow",
+                                        "<html><head/><body><p><span style=\" font-size:14pt;\">Баланс</span></p></body></html>"))
         self.pushButton_6.setText(_translate("MainWindow", "Пополнения баланса"))
         self.pushButton_7.setText(_translate("MainWindow", "Вывести деньги"))
-        self.label_3.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">100$</span></p></body></html>"))
-        self.label_4.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые участвуют в аукционе</span></p></body></html>"))
+        self.label_3.setText(_translate("MainWindow",
+                                        "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">100$</span></p></body></html>"))
+        self.label_4.setText(_translate("MainWindow",
+                                        "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые участвуют в аукционе</span></p></body></html>"))
         self.tableWidget.setSortingEnabled(False)
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Описание и доп. информация"))
@@ -247,7 +253,8 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "дложенная цена"))
         item = self.tableWidget.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Время окончания аукциона"))
-        self.label_5.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые купили или у которых вышло время аукциона</span></p></body></html>"))
+        self.label_5.setText(_translate("MainWindow",
+                                        "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые купили или у которых вышло время аукциона</span></p></body></html>"))
         self.pushButton_8.setText(_translate("MainWindow", "Удалить выделенный товар"))
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Описание и доп. информация"))
@@ -264,99 +271,55 @@ class Ui_MainWindow(object):
         item = self.tableWidget_2.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Статус оплаты"))
         self.pushButton_9.setText(_translate("MainWindow", "Удалить выделенный \n"
-"товар из списка"))
+                                                           "товар из списка"))
         self.pushButton_10.setText(_translate("MainWindow", "Очистить весь список"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
-"тавар на торги вновь")) 
+                                                            "тавар на торги вновь"))
 
-    # Заполнение таблицы товаров на аукционе     
-    # def Auction(self):
-    #     dt_now = (datetime.datetime.now()) # Определяем текущее время
-    #
-    #     with con:
-    #         #con.execute(f"""UPDATE Lots
-    #                             #SET status = 'продан'
-    #                             #WHERE lot_id = 3""")
-    #
-    #         table = con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), end_time FROM Lots
-    #                                     INNER JOIN Products
-    #                                         ON Lots.product_id = Products.product_id
-    #                                     INNER JOIN Product_images
-    #                                         ON Lots.product_id = Product_images.product_id
-    #                                     INNER JOIN Bids
-    #                                         ON Lots.lot_id = Bids.lot_id
-    #                                      WHERE Lots.end_time >= '{dt_now}'
-    #                                      GROUP BY Bids.lot_id""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-    #         table = table.fetchall()
-    #
-    #         tableNULL = con.execute(f"""SELECT description, image_pt, starting_price, end_time FROM Lots
-    #                                     INNER JOIN Products
-    #                                         ON Lots.product_id = Products.product_id
-    #                                     INNER JOIN Product_images
-    #                                         ON Lots.product_id = Product_images.product_id
-    #                                     LEFT JOIN Bids
-    #                                         ON Bids.lot_id = Lots.lot_id
-    #                                      WHERE Lots.end_time >= '{dt_now}' AND Bids.lot_id IS NULL
-    #                                      """)   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-    #         tableNULL = tableNULL.fetchall()
-    #
-    #         self.tableWidget.setRowCount(len(table) + len(tableNULL)) # Создаем строки в таблице
-    #         # Заполняем сталбцы с окончанием торгов и стартовую цену лота
-    #         for k in range (len(table)):
-    #             self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table[k][0])))
-    #             self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table[k][1])))
-    #             self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table[k][2])))
-    #             self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table[k][3])))
-    #             self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
-    #
-    #         for k in range (len(tableNULL)):
-    #             self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
-    #             self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))
-    #             self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
-    #             self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
-    #             self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
-    #
-    #
-    #         table1 = con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username FROM Auction_history
-    #                                  INNER JOIN Lots
-    #                                     ON Auction_history.lot_id = Lots.product_id
-    #                                  INNER JOIN Products
-    #                                     ON Lots.product_id = Products.product_id
-    #                                  INNER JOIN Product_images
-    #                                     ON Lots.product_id = Product_images.product_id
-    #                                  INNER JOIN Users
-    #                                     ON Auction_history.winner_id = Users.user_id
-    #                                  WHERE Lots.end_time < '{dt_now}'""")   # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-    #         table1 = table1.fetchall()
-    #
-    #         self.tableWidget_2.setRowCount(len(table1)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
-    #         for k in range (len(table1)):
-    #             self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
-    #             self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
-    #             self.tableWidget_2.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table1[k][2])))
-    #             self.tableWidget_2.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table1[k][3])))
-    #             self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
-    #             self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
-    #             self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem('оплачено (?????????)'))
-    #
-    # # Блокируем изменения ячейки
-    # def EditingBlock(self):
-    #     it = QtWidgets.QTableWidgetItem(self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn()).text())
-    #     it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
-    #     self.tableWidget.setItem(self.tableWidget.currentRow(), self.tableWidget.currentColumn(), it)
-        
-                          
+        # Заполнение таблицы товаров на аукционе
 
-            
+    def auction(self):
+        home_page = db.Auction()
+        table, tableNULL, table1 = home_page[0], home_page[1], home_page[2]
 
+        self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
+        # Заполняем сталбцы с окончанием торгов и стартовую цену лота
+        for k in range(len(table)):
+            self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table[k][0])))
+            self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table[k][1])))
+            self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table[k][2])))
+            self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table[k][3])))
+            self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
 
+        for k in range(len(tableNULL)):
+            self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
+            self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))
+            self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
+            self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
+            self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
+
+        self.tableWidget_2.setRowCount(
+            len(table1))  # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
+        for k in range(len(table1)):
+            self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
+            self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
+            self.tableWidget_2.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table1[k][2])))
+            self.tableWidget_2.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table1[k][3])))
+            self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
+            self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
+            self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem('оплачено (?????????)'))
+
+    # Блокируем изменения ячейки
+    def EditingBlock(self):
+        it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
+        it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
 
     def ИТ(self):
         Dialog = QtWidgets.QDialog()
         ui = ИсторияТоргов.Ui_Dialog()
         ui.setupUi(Dialog)
         Dialog.exec_()
-    
+
     def НЛ(self):
         Dialog = QtWidgets.QDialog()
         ui = НовыйЛот.Ui_Dialog()
@@ -370,6 +333,7 @@ class Ui_MainWindow(object):
         ui.fill_admin_table()
         ui.fill_user_table()
         Dialog.exec_()
+
     def products_window(self):
         Dialog = QtWidgets.QDialog()
         ui = products_window.Ui_Dialog()
@@ -378,22 +342,19 @@ class Ui_MainWindow(object):
         Dialog.exec_()
 
     def Confirmation(self, n):
-        if n == 'УТ':
-            Dialog = QtWidgets.QDialog()
-            ui = УдалениеТовара.Ui_Dialog()
-            ui.setupUi(Dialog)
-            Dialog.exec_()
-        # elif n == 'ВТ':
-        #     Dialog = QtWidgets.QDialog()
-        #     ui = ВыставлениеТовара.Ui_Dialog()
-        #     ui.setupUi(Dialog)
-        #     Dialog.exec_()
+        Dialog = QtWidgets.QDialog()
+        ui = УдалениеТовара.Ui_Dialog(n)
+        ui.setupUi(Dialog)
+        Dialog.exec_()
+
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
+    ui.auction()
     MainWindow.show()
     sys.exit(app.exec_())
