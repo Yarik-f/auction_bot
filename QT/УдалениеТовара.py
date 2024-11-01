@@ -1,10 +1,18 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import functools
+import sys
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+sys.path.append(project_root)
+from DataBase.database import db
+from main_window import Ui_MainWindow 
 
 class Ui_Dialog(object):
-    def __init__(self, n):
+    def __init__(self, n, t):
         self.n = n
-        
+        self.t = t[0]
+
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(392, 213)
@@ -18,7 +26,7 @@ class Ui_Dialog(object):
         self.textEdit.setObjectName("textEdit")
 
         self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept) # type: ignore
+        self.buttonBox.accepted.connect(functools.partial(self.OK, self.t)) # type: ignore
         self.buttonBox.rejected.connect(Dialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -34,10 +42,17 @@ class Ui_Dialog(object):
         self.textEdit.setFont(font)
         #self.textEdit.setCurrentFont(QtGui.QFont())
 
+    def OK (self, t):
+        #db.qwe(t)
+        MainWindow = QtWidgets.QMainWindow()
+        ui = Ui_MainWindow()
+        ui.setupUi(MainWindow)
+        ui.auction()
+ 
         
         
+                
         
-
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
