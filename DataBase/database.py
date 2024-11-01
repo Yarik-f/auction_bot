@@ -226,8 +226,9 @@ class Database:
 
     def get_product_data(self):
         data = self.con.execute('''
-            SELECT p.title, p.description, p.price, p.quantity, p.location
-            FROM Products p
+            SELECT p.title, p.description, p.price, p.quantity, p.location, i.image_pt
+            FROM Product_images i
+            JOIN Products p ON i.product_id = p.product_id
         ''')
         data = data.fetchall()
         return data

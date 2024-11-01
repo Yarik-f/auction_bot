@@ -1,8 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import functools
-import sqlite3 as sl
 
-import ИсторияТоргов, УдалениеТовара, ПА, products_window
+import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window
 from DataBase.database import db
 
 
@@ -275,7 +274,7 @@ class Ui_MainWindow(object):
 
     def UA(self):
         Dialog = QtWidgets.QDialog()
-        ui = ПА.Ui_Dialog()
+        ui = user_admin_window.Ui_Dialog()
         ui.setupUi(Dialog)
         ui.fill_admin_table()
         ui.fill_user_table()
