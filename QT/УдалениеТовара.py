@@ -43,11 +43,18 @@ class Ui_Dialog(object):
         #self.textEdit.setCurrentFont(QtGui.QFont())
 
     def OK (self, t):
-        #db.qwe(t)
+        db.qwe(t)
         MainWindow = QtWidgets.QMainWindow()
         ui = Ui_MainWindow()
         ui.setupUi(MainWindow)
         ui.auction()
+        #app = QtWidgets.QApplication(sys.argv)
+        #Window = QtWidgets.QDialog(flags=QtCore.Qt.WindowType.Dialog)
+        #Window.close
+        #Window.show()
+        #sys.exit(app.exec_())
+        
+
  
         
         
