@@ -7,6 +7,7 @@ from DataBase.database import db
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, root=True):
+        self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1350, 930)
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
@@ -161,12 +162,12 @@ class Ui_MainWindow(object):
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
         self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 
                                                             'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )',
-                                                            self.r))
-        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?'))
+                                                            self.r, 8))
+        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?', self.r, 11 ))
         self.retranslateUi(MainWindow)
         
-        self.tableWidget.itemSelectionChanged.connect(self.click_of_table)
-       #self.tableWidget_2.itemSelectionChanged.connect(self.click_of_table)
+        self.tableWidget.itemSelectionChanged.connect(functools.partial(self.click_of_table, 1))
+        self.tableWidget_2.itemSelectionChanged.connect(functools.partial(self.click_of_table, 2))
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -217,13 +218,18 @@ class Ui_MainWindow(object):
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
                                                             "тавар на торги вновь"))
 
-     
 
     #Отслеживаем нажатые ячейки 
-    def click_of_table(self):
+    def click_of_table(self, n):
         self.r.clear()
-        row = self.tableWidget.currentRow() # Номер строки
-        self.r.append(self.tableWidget.item(row, 0).text())
+        if n == 1:
+            row = self.tableWidget.currentRow() # Номер строки
+            self.r.append(self.tableWidget.item(row, 0).text())
+        elif n == 2:
+            row = self.tableWidget_2.currentRow() # Номер строки
+            self.r.append(self.tableWidget_2.item(row, 0).text())
+        
+        print(self.r)
 
     # Заполнение таблиц на главной страницы 
     def auction(self):
@@ -247,8 +253,6 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
             self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
             self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
-
-
 
         self.tableWidget_2.setRowCount(
             len(table1))  # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
@@ -275,9 +279,7 @@ class Ui_MainWindow(object):
         Dialog = QtWidgets.QDialog()
         ui = ИсторияТоргов.Ui_Dialog()
         ui.setupUi(Dialog)
-
-
-    
+        Dialog.exec_()
 
     def UA(self):
         Dialog = QtWidgets.QDialog()
@@ -294,11 +296,13 @@ class Ui_MainWindow(object):
         ui.fill_product_table()
         Dialog.exec_()
 
-    def Confirmation(self, n, t):
+    def Confirmation(self, n, t, u):
         Dialog = QtWidgets.QDialog()
-        ui = УдалениеТовара.Ui_Dialog(n, t)
+        ui = УдалениеТовара.Ui_Dialog(n, t, u)
+        Ui_MainWindow.auction(self)
         ui.setupUi(Dialog)
         Dialog.exec_()
+        self.MainWindow.close()
 
 
 if __name__ == "__main__":

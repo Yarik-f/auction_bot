@@ -2,6 +2,7 @@ import sqlite3 as sql
 import os
 from PyQt5 import QtCore
 import datetime
+import time
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'my_database.db')
@@ -233,71 +234,79 @@ class Database:
         data = data.fetchall()
         return data
 
-    def qwe(self, n):
-        
+    def add_delete(self, n, u):
         #dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%d-%m %H:%M:%S') , title
-        dt_now = datetime.datetime.today().strftime('%Y-%d-%m %H:%M:%S')
-
-        r = self.con.execute(f"""SELECT product_id FROM Products
-                                         WHERE description = '{n}'""")
-        r = r.fetchall()
-        r = r[0][0]
-        
-        self.con.execute(f"""UPDATE Lots
-                            SET end_time = '{dt_now}'
-                            WHERE product_id = {r} """)
-        
-        self.con.execute(f"""UPDATE Lots
-                            SET starting_price = 300
-                            WHERE product_id = 4 """)
-        print(r)
+        if u == 8:
+            dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+            with self.con:
+                r = self.con.execute(f"""SELECT product_id FROM Products
+                                                WHERE description = '{n}'""")
+                r = r.fetchall()
+                r = r[0][0]
+                
+                self.con.execute(f"""UPDATE Lots
+                                    SET end_time = '{dt_now}'
+                                    WHERE product_id = {r} """)
+                
+        elif u == 11: 
+            dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')
+            with self.con:
+                r = self.con.execute(f"""SELECT product_id FROM Products
+                                                WHERE description = '{n}'""")
+                r = r.fetchall()
+                r = r[0][0]
+                
+                self.con.execute(f"""UPDATE Lots
+                                    SET end_time = '{dt_now}'
+                                    WHERE product_id = {r} """)
+          
 
 
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
+        with self.con:
+            # con.execute(f"""UPDATE Lots
+            # SET status = 'продан'
+            # WHERE lot_id = 3""")
+            #self.con.execute(f"""UPDATE Lots
+                               # SET starting_price = 300
+                                #WHERE product_id = 4 """)
+            
+            table = self.con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
+                                            INNER JOIN Products 
+                                                ON Lots.product_id = Products.product_id
+                                            INNER JOIN Product_images 
+                                                ON Lots.product_id = Product_images.product_id
+                                            INNER JOIN Bids 
+                                                ON Lots.lot_id = Bids.lot_id
+                                            WHERE Lots.end_time > '{dt_now}'
+                                            GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table = table.fetchall()
 
-        # con.execute(f"""UPDATE Lots
-        # SET status = 'продан'
-        # WHERE lot_id = 3""")
-        self.con.execute(f"""UPDATE Lots
-                            SET starting_price = 400
-                            WHERE product_id = 4 """)
-        
-        table = self.con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
+            tableNULL = self.con.execute(f"""SELECT description, image_pt, starting_price, start_time, end_time FROM Lots
+                                            INNER JOIN Products 
+                                                ON Lots.product_id = Products.product_id
+                                            INNER JOIN Product_images 
+                                                ON Lots.product_id = Product_images.product_id
+                                            LEFT JOIN Bids 
+                                                ON Bids.lot_id = Lots.lot_id
+                                            WHERE Lots.end_time > '{dt_now}' AND Bids.lot_id IS NULL
+                                            """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            tableNULL = tableNULL.fetchall()
+
+            table1 = self.con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username  FROM Auction_history
+                                        INNER JOIN Lots 
+                                            ON Auction_history.lot_id = Lots.product_id
                                         INNER JOIN Products 
                                             ON Lots.product_id = Products.product_id
                                         INNER JOIN Product_images 
                                             ON Lots.product_id = Product_images.product_id
-                                        INNER JOIN Bids 
-                                            ON Lots.lot_id = Bids.lot_id
-                                         WHERE Lots.end_time > '{dt_now}'
-                                         GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-        table = table.fetchall()
-
-        tableNULL = self.con.execute(f"""SELECT description, image_pt, starting_price, start_time, end_time FROM Lots
-                                        INNER JOIN Products 
-                                            ON Lots.product_id = Products.product_id
-                                        INNER JOIN Product_images 
-                                            ON Lots.product_id = Product_images.product_id
-                                        LEFT JOIN Bids 
-                                            ON Bids.lot_id = Lots.lot_id
-                                         WHERE Lots.end_time > '{dt_now}' AND Bids.lot_id IS NULL
-                                         """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-        tableNULL = tableNULL.fetchall()
-
-        table1 = self.con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username FROM Auction_history
-                                     INNER JOIN Lots 
-                                        ON Auction_history.lot_id = Lots.product_id
-                                     INNER JOIN Products 
-                                        ON Lots.product_id = Products.product_id
-                                     INNER JOIN Product_images 
-                                        ON Lots.product_id = Product_images.product_id
-                                     INNER JOIN Users 
-                                        ON Auction_history.winner_id = Users.user_id
-                                     WHERE Lots.end_time < '{dt_now}'""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-        table1 = table1.fetchall()
-        return [table, tableNULL, table1]
+                                        INNER JOIN Users 
+                                            ON Auction_history.winner_id = Users.user_id
+                                        WHERE Lots.end_time < '{dt_now}'""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table1 = table1.fetchall()
+            return [table, tableNULL, table1]
 
 
 db = Database()
