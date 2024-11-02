@@ -1,12 +1,14 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QDialog
 import create_lot
 
 from DataBase.database import db, item_is_not_editable
 
 
-class Ui_Dialog(object):
+class Ui_Dialog(QtCore.QObject):
+    lot_created = QtCore.pyqtSignal()
     def setupUi(self, Dialog):
+        self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(1117, 723)
         self.tableWidget = QtWidgets.QTableWidget(Dialog)
@@ -45,6 +47,7 @@ class Ui_Dialog(object):
         self.pushButton_5.setFont(font)
         self.pushButton_5.setObjectName("pushButton_5")
 
+        self.pushButton.clicked.connect(self.save_and_close)
         self.pushButton_5.clicked.connect(self.create_lot)
         self.tableWidget.itemClicked.connect(self.get_product_id_and_price)
 
@@ -79,6 +82,7 @@ class Ui_Dialog(object):
         self.tableWidget.resizeColumnToContents(1)
         self.tableWidget.resizeColumnToContents(4)
         self.tableWidget.resizeColumnToContents(5)
+
     def get_product_id_and_price(self):
         row = self.tableWidget.currentRow()
         if row != -1:
@@ -96,6 +100,13 @@ class Ui_Dialog(object):
         ui.setupUi(Dialog)
         ui.table(product_id, price)
         Dialog.exec_()
+
+    def save_and_close(self):
+        self.lot_created.emit()
+        self.Dialog.close()
+
+
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

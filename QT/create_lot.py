@@ -9,7 +9,10 @@ end_time = start_time + timedelta(days=3)
 start_time = start_time.strftime('%Y-%m-%d %H:%M:%S')
 end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
 class Ui_Dialog(object):
-    def setupUi(self, Dialog):
+
+    def setupUi(self, Dialog, ):
+
+        self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(1117, 308)
         self.tableWidget = QtWidgets.QTableWidget(Dialog)
@@ -63,6 +66,9 @@ class Ui_Dialog(object):
         status = self.combo_box_2.currentText()
 
         db.create_lot(product_id, starting_price, seller_id, start_time, end_time, document_type, status)
+
+
+        self.Dialog.close()
 
 
 if __name__ == "__main__":
