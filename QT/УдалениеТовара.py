@@ -46,7 +46,6 @@ class Ui_Dialog(object):
         #self.textEdit.setCurrentFont(QtGui.QFont())
 
     def OK (self):
-        db.add_delete(self.t, self.u)
-        if self.main_window:
-            self.main_window.auction()
+        db.add_delete(self.t, self.u)        
+        self.main_window.auction()
         self.Dialog.close()
