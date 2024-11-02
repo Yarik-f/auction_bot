@@ -9,11 +9,11 @@ from DataBase.database import db
 from main_window import Ui_MainWindow 
 
 class Ui_Dialog(object):
-    def __init__(self, n, t, u, main_window):
+    def __init__(self, n, t, u):
         self.n = n
         self.t = t[0]
         self.u = u
-        self.main_window = main_window
+
 
     def setupUi(self, Dialog):
         self.Dialog = Dialog
@@ -47,6 +47,4 @@ class Ui_Dialog(object):
 
     def OK (self):
         db.add_delete(self.t, self.u)
-        if self.main_window:
-            self.main_window.auction()
-        self.Dialog.close()
+        self.Dialog.accept()

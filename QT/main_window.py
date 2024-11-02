@@ -274,7 +274,6 @@ class Ui_MainWindow(object):
     def EditingBlock_2(self):
         it = self.tableWidget_2.item(self.tableWidget_2.currentRow(), self.tableWidget_2.currentColumn())
         it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
-
     def ИТ(self):
         Dialog = QtWidgets.QDialog()
         ui = ИсторияТоргов.Ui_Dialog()
@@ -294,13 +293,18 @@ class Ui_MainWindow(object):
         ui = products_window.Ui_Dialog()
         ui.setupUi(Dialog)
         ui.fill_product_table()
-        Dialog.exec_()
+        ui.lot_created.connect(self.auction)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Rejected:
+            self.auction()
 
     def Confirmation(self, n, t, u):
         Dialog = QtWidgets.QDialog()
-        ui = УдалениеТовара.Ui_Dialog(n, t, u, main_window=self)
+        ui = УдалениеТовара.Ui_Dialog(n, t, u)
         ui.setupUi(Dialog)
-        Dialog.exec_()
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            self.auction()
 
 
 if __name__ == "__main__":
