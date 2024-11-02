@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem
+import create_lot
 
 from DataBase.database import db, item_is_not_editable
 
@@ -44,6 +45,9 @@ class Ui_Dialog(object):
         self.pushButton_5.setFont(font)
         self.pushButton_5.setObjectName("pushButton_5")
 
+        self.pushButton_5.clicked.connect(self.create_lot)
+        self.tableWidget.itemClicked.connect(self.get_product_id_and_price)
+
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -75,8 +79,23 @@ class Ui_Dialog(object):
         self.tableWidget.resizeColumnToContents(1)
         self.tableWidget.resizeColumnToContents(4)
         self.tableWidget.resizeColumnToContents(5)
-
-
+    def get_product_id_and_price(self):
+        row = self.tableWidget.currentRow()
+        if row != -1:
+            title = self.tableWidget.item(row, 0).text()
+            description = self.tableWidget.item(row, 1).text()
+            price = self.tableWidget.item(row, 2).text()
+            product_id = db.get_id_product(title, description)
+            return [product_id, price]
+    def create_lot(self):
+        product = self.get_product_id_and_price()
+        product_id = product[0]
+        price = product[1]
+        Dialog = QtWidgets.QDialog()
+        ui = create_lot.Ui_Dialog()
+        ui.setupUi(Dialog)
+        ui.table(product_id, price)
+        Dialog.exec_()
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

@@ -67,7 +67,7 @@ class Database:
                 image_tg VARCHAR(40),
                 image_pt VARCHAR(255) NOT NULL,
                 product_id INTEGER,
-                FOREIGN KEY (product_id) REFERENCES products(product_id)
+                FOREIGN KEY (product_id) REFERENCES Products(product_id)
                 )
                 ''')
             self.con.execute('''
@@ -79,9 +79,9 @@ class Database:
                 start_time DATETIME,
                 end_time DATETIME,
                 document_type VARCHAR(50) CHECK(document_type IN ('Ювелирный', 'Историч ценный', 'Стандартный')),
-                status VARCHAR(20) CHECK(status IN ('в процессе', 'продан', 'не продан')) DEFAULT 'в процессе',
-                FOREIGN KEY (product_id) REFERENCES products(product_id),
-                FOREIGN KEY (seller_id) REFERENCES users(user_id)
+                status VARCHAR(20) CHECK(status IN ('В процессе', 'Продан', 'Не продан')) DEFAULT 'В процессе',
+                FOREIGN KEY (product_id) REFERENCES Products(product_id),
+                FOREIGN KEY (seller_id) REFERENCES Admins(admin_id)
                 )
                 ''')
             self.con.execute('''
@@ -91,8 +91,8 @@ class Database:
                 user_id INTEGER,
                 bid_amount DECIMAL NOT NULL,
                 bid_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (lot_id) REFERENCES lots(lot_id),
-                FOREIGN KEY (user_id) REFERENCES users(user_id)
+                FOREIGN KEY (lot_id) REFERENCES Lots(lot_id),
+                FOREIGN KEY (user_id) REFERENCES Users(user_id)
                 )
                 ''')
             self.con.execute('''
@@ -102,8 +102,8 @@ class Database:
                 winner_id INTEGER,
                 final_price DECIMAL NOT NULL,
                 completion_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (lot_id) REFERENCES lots(lot_id),
-                FOREIGN KEY (winner_id) REFERENCES users(user_id)
+                FOREIGN KEY (lot_id) REFERENCES Lots(lot_id),
+                FOREIGN KEY (winner_id) REFERENCES Users(user_id)
                 )
                 ''')
             self.con.execute('''
@@ -114,8 +114,8 @@ class Database:
                 reason TEXT NOT NULL,
                 status VARCHAR(20) CHECK(status IN ('в ожидании', 'решена')) DEFAULT 'в ожидании',
                 strike_count INTEGER DEFAULT 0,
-                FOREIGN KEY (complainant_id) REFERENCES users(user_id),
-                FOREIGN KEY (target_admin_id) REFERENCES admins(admin_id)
+                FOREIGN KEY (complainant_id) REFERENCES Users(user_id),
+                FOREIGN KEY (target_admin_id) REFERENCES Admins(admin_id)
                 )
                 ''')
             self.con.execute('''
@@ -125,8 +125,8 @@ class Database:
                 admin_id INTEGER NOT NULL,
                 reason TEXT NOT NULL,
                 strike_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(user_id),
-                FOREIGN KEY (admin_id) REFERENCES admins(admin_id)
+                FOREIGN KEY (user_id) REFERENCES Users(user_id),
+                FOREIGN KEY (admin_id) REFERENCES Admins(admin_id)
                 )
                 ''')
             self.con.execute('''
@@ -135,27 +135,25 @@ class Database:
                 lot_id INTEGER,
                 buyer_id INTEGER,
                 creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (lot_id) REFERENCES lots(lot_id),
-                FOREIGN KEY (buyer_id) REFERENCES users(user_id)
+                FOREIGN KEY (lot_id) REFERENCES Lots(lot_id),
+                FOREIGN KEY (buyer_id) REFERENCES Users(user_id)
                 )
                 ''')
-
     def get_data(self, table, name_table, data):
         for item in data[name_table]:
             self.con.execute(table, item)
-
     def fill_table(self, data):
-        sql_insert_roles = "INSERT INTO roles (role_name, permissions) values(?, ?)"
-        sql_insert_users = "INSERT INTO users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
-        sql_insert_admins = "INSERT INTO admins (username, password, balance, role_id, commission_rate, penalties) values(?, ?, ?, ?, ?, ?)"
-        sql_insert_products = "INSERT INTO products (title, description, price, quantity, location) values(?, ?, ?, ?, ?)"
-        sql_insert_product_images = "INSERT INTO product_images (image_tg, image_pt, product_id) values(?, ?, ?)"
-        sql_insert_lots = "INSERT INTO lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
-        sql_insert_bids = "INSERT INTO bids (lot_id, user_id, bid_amount) values(?, ?, ?)"
-        sql_insert_auction_history = "INSERT INTO auction_history (lot_id, winner_id, final_price) values(?, ?, ?)"
-        sql_insert_complaints_strikes = "INSERT INTO complaints_strikes (complainant_id, target_admin_id, reason, status, strike_count) values(?, ?, ?, ?, ?)"
-        sql_insert_strikes = "INSERT INTO strikes (user_id, admin_id, reason) values(?, ?, ?)"
-        sql_insert_transfer_documents = "INSERT INTO transfer_documents (lot_id, buyer_id) values(?, ?)"
+        sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
+        sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
+        sql_insert_admins = "INSERT INTO Admins (username, password, balance, role_id, commission_rate, penalties) values(?, ?, ?, ?, ?, ?)"
+        sql_insert_products = "INSERT INTO Products (title, description, price, quantity, location) values(?, ?, ?, ?, ?)"
+        sql_insert_product_images = "INSERT INTO Product_images (image_tg, image_pt, product_id) values(?, ?, ?)"
+        sql_insert_lots = "INSERT INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
+        sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount) values(?, ?, ?)"
+        sql_insert_auction_history = "INSERT INTO Auction_history (lot_id, winner_id, final_price) values(?, ?, ?)"
+        sql_insert_complaints_strikes = "INSERT INTO Complaints_strikes (complainant_id, target_admin_id, reason, status, strike_count) values(?, ?, ?, ?, ?)"
+        sql_insert_strikes = "INSERT INTO Strikes (user_id, admin_id, reason) values(?, ?, ?)"
+        sql_insert_transfer_documents = "INSERT INTO Transfer_documents (lot_id, buyer_id) values(?, ?)"
 
         self.get_data(sql_insert_roles, 'roles', data)
         self.get_data(sql_insert_users, 'users', data)
@@ -169,7 +167,6 @@ class Database:
         self.get_data(sql_insert_strikes, 'strikes', data)
         self.get_data(sql_insert_transfer_documents, 'transfer_documents', data)
         self.con.commit()
-
     def clear_data(self):
         with self.con:
             self.con.execute("DELETE FROM Roles")
@@ -184,7 +181,6 @@ class Database:
             self.con.execute("DELETE FROM Strikes")
             self.con.execute("DELETE FROM Transfer_documents")
         self.con.commit()
-
     def delete_table(self):
         with self.con:
             self.con.execute("DROP TABLE IF EXISTS Roles")
@@ -200,11 +196,11 @@ class Database:
             self.con.execute("DROP TABLE IF EXISTS Transfer_documents")
         self.con.commit()
 
+
     def get_table_data(self, table_name):
         data = self.con.execute(f'''SELECT * FROM {table_name}''')
         data = data.fetchall()
         return data
-
     def get_user_data(self):
         data = self.con.execute('''
             SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
@@ -214,7 +210,6 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-
     def get_admin_data(self):
         data = self.con.execute('''
             SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
@@ -223,7 +218,6 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-
     def get_product_data(self):
         data = self.con.execute('''
             SELECT p.title, p.description, p.price, p.quantity, p.location, i.image_pt
@@ -232,6 +226,24 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+    def get_id_product(self, title, description):
+        title = f'{title}'
+        description = f'{description}'
+        query ='''
+            SELECT product_id 
+            FROM Products 
+            WHERE title = ? AND description = ?'''
+        data = self.con.execute(query, (title, description)).fetchone()
+        return data[0]
+    def create_lot(self, product_id, starting_price, seller_id, start_time, end_time, document_type, status):
+        sql_insert_lots = "INSERT OR IGNORE INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
+        self.con.execute(sql_insert_lots,
+                         [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
+        self.con.commit()
+
+
+
+
 
     def qwe(self, n):
         
@@ -251,7 +263,6 @@ class Database:
                             SET starting_price = 300
                             WHERE product_id = 4 """)
         print(r)
-
 
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
@@ -340,13 +351,13 @@ data_db = {
         ('tg7', "http://example.com/images/vase.jpg", 7),
     ],
     "lots": [
-        (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "в процессе"),
-        (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "в процессе"),
-        (3, 250.00, 3, "2024-10-24 10:00:00", "2024-11-29 10:00:00", "Стандартный", "в процессе"),
-        (4, 300.00, 4, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Историч ценный", "в процессе"),
-        (5, 500.00, 5, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "в процессе"),
-        (6, 1200.00, 6, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "в процессе"),
-        (7, 400.00, 7, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "в процессе"),
+        (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "В процессе"),
+        (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "В процессе"),
+        (3, 250.00, 2, "2024-10-24 10:00:00", "2024-11-29 10:00:00", "Стандартный", "В процессе"),
+        (4, 300.00, 2, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Историч ценный", "В процессе"),
+        (5, 500.00, 1, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "В процессе"),
+        (6, 1200.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "В процессе"),
+        (7, 400.00, 2, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "В процессе"),
     ],
     "bids": [
         (1, 1, 1550.00),
@@ -395,7 +406,9 @@ data_db = {
     ]
 }
 
-#db.clear_data()
-#db.delete_table()
-#db.create_table()
-#db.fill_table(data_db)
+#db.create_lot('1', '1000', '1', '2024-10-24 10:00:00', '2024-10-30 10:00:00', 'Стандартный', 'в процессе')
+
+# db.clear_data()
+# db.delete_table()
+# db.create_table()
+# db.fill_table(data_db)
