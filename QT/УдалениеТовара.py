@@ -9,11 +9,13 @@ from DataBase.database import db
 from main_window import Ui_MainWindow 
 
 class Ui_Dialog(object):
-    def __init__(self, n, t):
+    def __init__(self, n, t, u):
         self.n = n
         self.t = t[0]
+        self.u = u
 
     def setupUi(self, Dialog):
+        self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(392, 213)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
@@ -26,7 +28,7 @@ class Ui_Dialog(object):
         self.textEdit.setObjectName("textEdit")
 
         self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(functools.partial(self.OK, self.t)) # type: ignore
+        self.buttonBox.accepted.connect(functools.partial(self.OK, self.t, self.u)) # type: ignore
         self.buttonBox.rejected.connect(Dialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -42,23 +44,20 @@ class Ui_Dialog(object):
         self.textEdit.setFont(font)
         #self.textEdit.setCurrentFont(QtGui.QFont())
 
-    def OK (self, t):
-        db.qwe(t)
-        MainWindow = QtWidgets.QMainWindow()
-        ui = Ui_MainWindow()
-        ui.setupUi(MainWindow)
-        ui.auction()
-        #app = QtWidgets.QApplication(sys.argv)
-        #Window = QtWidgets.QDialog(flags=QtCore.Qt.WindowType.Dialog)
-        #Window.close
-        #Window.show()
-        #sys.exit(app.exec_())
-        
+    def OK (self, t, u):
+        db.add_delete(t, u)
+        #MainWindow = QtWidgets.QMainWindow()
+        #ui = Ui_MainWindow()
+        #ui.setupUi(MainWindow)
+        #ui.auction()
+        #MainWindow.show()
 
- 
-        
-        
-                
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.MainWindow)
+        self.ui.auction()
+        self.Dialog.close()
+        self.MainWindow.show()
         
 if __name__ == "__main__":
     import sys
