@@ -298,11 +298,9 @@ class Ui_MainWindow(object):
 
     def Confirmation(self, n, t, u):
         Dialog = QtWidgets.QDialog()
-        ui = УдалениеТовара.Ui_Dialog(n, t, u)
-        Ui_MainWindow.auction(self)
+        ui = УдалениеТовара.Ui_Dialog(n, t, u, main_window=self)
         ui.setupUi(Dialog)
         Dialog.exec_()
-        self.MainWindow.close()
 
 
 if __name__ == "__main__":
