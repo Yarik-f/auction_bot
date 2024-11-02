@@ -262,7 +262,7 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
             self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
             self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
-            self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+            self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
 
         self.tableWidget_2.setRowCount(
             len(table1))  # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота

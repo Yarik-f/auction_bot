@@ -241,7 +241,7 @@ class Database:
                          [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
         self.con.commit()
 
-    def add_delete(self, n, u):
+    def add_delete(self, n, u): # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             with self.con:                
