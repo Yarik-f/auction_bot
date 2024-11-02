@@ -2,7 +2,6 @@ import sqlite3 as sql
 import os
 from PyQt5 import QtCore
 import datetime
-import time
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'my_database.db')
@@ -242,49 +241,27 @@ class Database:
                          [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
         self.con.commit()
 
-
-
-
-
-    def add_delete(self, n, u):
-        #dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%d-%m %H:%M:%S') , title
+    def add_delete(self, n, u): # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            with self.con:
-                r = self.con.execute(f"""SELECT product_id FROM Products
-                                                WHERE description = '{n}'""")
-                r = r.fetchall()
-                r = r[0][0]
-                
+            with self.con:                
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
-                                    WHERE product_id = {r} """)
+                                    WHERE lot_id = {n} """)
                 
         elif u == 11: 
             dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')
-            with self.con:
-                r = self.con.execute(f"""SELECT product_id FROM Products
-                                                WHERE description = '{n}'""")
-                r = r.fetchall()
-                r = r[0][0]
-                
+            with self.con:                
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
-                                    WHERE product_id = {r} """)
+                                    WHERE product_id = {n} """)
           
 
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
-        with self.con:
-            # con.execute(f"""UPDATE Lots
-            # SET status = 'продан'
-            # WHERE lot_id = 3""")
-            #self.con.execute(f"""UPDATE Lots
-                               # SET starting_price = 300
-                                #WHERE product_id = 4 """)
-            
-            table = self.con.execute(f"""SELECT description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
+        with self.con:            
+            table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
                                             INNER JOIN Products 
                                                 ON Lots.product_id = Products.product_id
                                             INNER JOIN Product_images 
@@ -295,7 +272,7 @@ class Database:
                                             GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table = table.fetchall()
 
-            tableNULL = self.con.execute(f"""SELECT description, image_pt, starting_price, start_time, end_time FROM Lots
+            tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time FROM Lots
                                             INNER JOIN Products 
                                                 ON Lots.product_id = Products.product_id
                                             INNER JOIN Product_images 
@@ -306,7 +283,7 @@ class Database:
                                             """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             tableNULL = tableNULL.fetchall()
 
-            table1 = self.con.execute(f"""SELECT description, image_pt, starting_price, final_price, status, username  FROM Auction_history
+            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Auction_history
                                         INNER JOIN Lots 
                                             ON Auction_history.lot_id = Lots.product_id
                                         INNER JOIN Products 
