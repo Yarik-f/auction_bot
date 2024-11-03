@@ -237,13 +237,11 @@ class Ui_MainWindow(object):
             row = self.tableWidget_2.currentRow() # Номер строки
             self.r.append(self.tableWidget_2.item(row, 0).text())
         
-        print(self.r)
 
     # Заполнение таблиц на главной страницы 
     def auction(self):
         home_page = db.Auction()
         table, tableNULL, table1 = home_page[0], home_page[1], home_page[2]
-
         self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
         # Заполняем сталбцы с окончанием торгов и стартовую цену лота
         for k in range(len(table)):
@@ -259,10 +257,11 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
             self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))
             self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
-            self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem('-'))
-            self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
+            self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
+            self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem('-'))
             self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
             self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+            
 
         self.tableWidget_2.setRowCount(
             len(table1))  # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота

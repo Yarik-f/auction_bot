@@ -1,12 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem
-import sys
-import os
+import sys, os, functools
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
 sys.path.append(project_root)
 from DataBase.database import db, item_is_not_editable
-
+import create_lot_UA
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -59,8 +58,13 @@ class Ui_Dialog(object):
         self.pushButton_8.setObjectName("pushButton_8")
         self.tabWidget.addTab(self.tab_2, "")
 
-        self.retranslateUi(Dialog)
+        self.pushButton.clicked.connect(functools.partial(self.add, 'add'))
+        self.pushButton_2.clicked.connect(self.delete_User)
+        self.pushButton_3.clicked.connect(functools.partial(self.edit, 'edit'))
         self.tabWidget.setCurrentIndex(0)
+        self.tableWidget.itemSelectionChanged.connect(self.click_of_table)
+
+        self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -77,6 +81,36 @@ class Ui_Dialog(object):
         self.pushButton_8.setText(_translate("Dialog", "Удалить"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Администраторы"))
 
+    def edit(self, k):
+        row = Ui_Dialog.click_of_table(self)
+        p = []
+        for s in range(self.tableWidget.columnCount()):
+            p.append(self.tableWidget.item(row, s).text()) 
+        Dialog = QtWidgets.QDialog()
+        ui = create_lot_UA.Ui_Dialog(k, p)
+        ui.setupUi(Dialog)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Rejected:
+            self.fill_user_table()
+
+    def add(self, k):
+        Dialog = QtWidgets.QDialog()
+        ui = create_lot_UA.Ui_Dialog(k, None)
+        ui.setupUi(Dialog)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Rejected:
+            self.fill_user_table()
+
+    def click_of_table(self):
+        print(self.tableWidget.currentRow())
+        return self.tableWidget.currentRow() # Номер строки
+        
+    def delete_User(self):
+        row = Ui_Dialog.click_of_table(self)
+        p = [self.tableWidget.item(row, 0).text(), self.tableWidget.item(row, 2).text(), self.tableWidget.item(row, 3).text()]
+        db.delete_User_db(p)
+        Ui_Dialog.fill_user_table(self)
+        
     def fill_user_table(self):
         users = db.get_user_data()
 
@@ -97,7 +131,7 @@ class Ui_Dialog(object):
                 else:
                     self.tableWidget.setItem(i, j, QTableWidgetItem(str(value)))
 
-        item_is_not_editable(self.tableWidget)
+        #item_is_not_editable(self.tableWidget)
 
         self.tableWidget.resizeColumnToContents(0)
         self.tableWidget.resizeColumnToContents(3)
@@ -116,7 +150,7 @@ class Ui_Dialog(object):
             for j, value in enumerate(admin):
                 self.tableWidget_2.setItem(i, j, QTableWidgetItem(str(value)))
 
-        item_is_not_editable(self.tableWidget_2)
+        #item_is_not_editable(self.tableWidget_2)
 
         self.tableWidget_2.resizeColumnToContents(0)
 
@@ -130,5 +164,3 @@ if __name__ == "__main__":
     ui.fill_admin_table()
     Dialog.show()
     sys.exit(app.exec_())
-
-

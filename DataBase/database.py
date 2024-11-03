@@ -273,7 +273,7 @@ class Database:
             with self.con:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
-                                    WHERE product_id = {n} """)
+                                    WHERE lot_id = {n} """)
 
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
@@ -303,7 +303,7 @@ class Database:
 
             table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Auction_history
                                         INNER JOIN Lots 
-                                            ON Auction_history.lot_id = Lots.product_id
+                                            ON Auction_history.lot_id = Lots.lot_id
                                         INNER JOIN Products 
                                             ON Lots.product_id = Products.product_id
                                         INNER JOIN Product_images 
@@ -314,7 +314,25 @@ class Database:
             table1 = table1.fetchall()
             return [table, tableNULL, table1]
 
+# Функция добавления значений в сам файл SQL               
+    def add_user_db(self, data):
+        with self.con:
+            self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
+                              values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""") # Происходит дабовления строки в SQL Таблицу  
 
+    def delete_User_db(self, d):
+        with self.con:
+                self.con.execute(f"""DELETE FROM Users  
+                                     WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных  
+    def edit_User_db(self, p, d):
+        with self.con:
+                r = self.con.execute(f"""SELECT user_id FROM Users
+                                            WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""") 
+                r = r.fetchall()
+                
+                self.con.execute(f"""UPDATE Users
+                                        SET username = '{p[0]}', balance = {p[2]}, successful_bids = {p[3]}, auto_bid_access = {p[4]}, is_banned = {p[5]}
+                                        WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки      
 db = Database()
 
 
