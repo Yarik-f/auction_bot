@@ -8,10 +8,10 @@ db_path = os.path.join(script_dir, 'my_database.db')
 
 
 def item_is_not_editable(table):
-    for i in range(table.rowCount()):
-        for j in range(table.columnCount()):
-            item = table.item(i, j)
-            if item:
+    for row in range(table.rowCount() - 1):
+        for col in range(table.columnCount()):
+            item = table.item(row, col)
+            if item is not None:
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
 
 
@@ -139,9 +139,11 @@ class Database:
                 FOREIGN KEY (buyer_id) REFERENCES Users(user_id)
                 )
                 ''')
+
     def get_data(self, table, name_table, data):
         for item in data[name_table]:
             self.con.execute(table, item)
+
     def fill_table(self, data):
         sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
@@ -167,6 +169,7 @@ class Database:
         self.get_data(sql_insert_strikes, 'strikes', data)
         self.get_data(sql_insert_transfer_documents, 'transfer_documents', data)
         self.con.commit()
+
     def clear_data(self):
         with self.con:
             self.con.execute("DELETE FROM Roles")
@@ -181,6 +184,7 @@ class Database:
             self.con.execute("DELETE FROM Strikes")
             self.con.execute("DELETE FROM Transfer_documents")
         self.con.commit()
+
     def delete_table(self):
         with self.con:
             self.con.execute("DROP TABLE IF EXISTS Roles")
@@ -196,11 +200,11 @@ class Database:
             self.con.execute("DROP TABLE IF EXISTS Transfer_documents")
         self.con.commit()
 
-
     def get_table_data(self, table_name):
         data = self.con.execute(f'''SELECT * FROM {table_name}''')
         data = data.fetchall()
         return data
+
     def get_user_data(self):
         data = self.con.execute('''
             SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
@@ -210,6 +214,7 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_admin_data(self):
         data = self.con.execute('''
             SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
@@ -218,6 +223,7 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_product_data(self):
         data = self.con.execute('''
             SELECT p.title, p.description, p.price, p.quantity, p.location, i.image_pt
@@ -226,41 +232,53 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_id_product(self, title, description):
         title = f'{title}'
         description = f'{description}'
-        query ='''
+        query = '''
             SELECT product_id 
             FROM Products 
             WHERE title = ? AND description = ?'''
         data = self.con.execute(query, (title, description)).fetchone()
         return data[0]
+
     def create_lot(self, product_id, starting_price, seller_id, start_time, end_time, document_type, status):
         sql_insert_lots = "INSERT OR IGNORE INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
         self.con.execute(sql_insert_lots,
                          [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
         self.con.commit()
 
-    def add_delete(self, n, u): # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
+    def add_product(self, title, description, price, quantity, location):
+        sql_insert_products = "INSERT INTO Products (title, description, price, quantity, location) values(?, ?, ?, ?, ?)"
+        self.con.execute(sql_insert_products,
+                         [title, description, price, quantity, location])
+        self.con.commit()
+    def add_product_image(self, image_pt, product_id):
+        sql_insert_product_images = "INSERT INTO Product_images (image_pt, product_id) values(?, ?)"
+        self.con.execute(sql_insert_product_images,
+                         [image_pt, product_id])
+        self.con.commit()
+
+    def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            with self.con:                
+            with self.con:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
-                
-        elif u == 11: 
+
+        elif u == 11:
             dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')
-            with self.con:                
+            with self.con:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE product_id = {n} """)
-          
 
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
-        with self.con:            
+        with self.con:
             table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
                                             INNER JOIN Products 
                                                 ON Lots.product_id = Products.product_id
@@ -298,6 +316,7 @@ class Database:
 
 
 db = Database()
+
 
 data_db = {
     "roles": [
@@ -391,8 +410,6 @@ data_db = {
         (7, 1),
     ]
 }
-
-#db.create_lot('1', '1000', '1', '2024-10-24 10:00:00', '2024-10-30 10:00:00', 'Стандартный', 'в процессе')
 
 # db.clear_data()
 # db.delete_table()

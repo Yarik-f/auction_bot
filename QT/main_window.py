@@ -304,9 +304,8 @@ class Ui_MainWindow(object):
         ui = products_window.Ui_Dialog()
         ui.setupUi(Dialog)
         ui.fill_product_table()
-        ui.lot_created.connect(self.auction)
         result = Dialog.exec_()
-        if result == QtWidgets.QDialog.Rejected:
+        if result == QtWidgets.QDialog.Accepted:
             self.auction()
 
     def Confirmation(self, n, t, u):

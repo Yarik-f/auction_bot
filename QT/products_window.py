@@ -1,12 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QDialog
-import create_lot
+import product_child_window
 
 from DataBase.database import db, item_is_not_editable
 
 
-class Ui_Dialog(QtCore.QObject):
-    lot_created = QtCore.pyqtSignal()
+class Ui_Dialog(object):
     def setupUi(self, Dialog):
         self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
@@ -48,7 +47,8 @@ class Ui_Dialog(QtCore.QObject):
         self.pushButton_5.setObjectName("pushButton_5")
 
         self.pushButton.clicked.connect(self.save_and_close)
-        self.pushButton_5.clicked.connect(self.create_lot)
+        self.pushButton_2.clicked.connect(self.child_window)
+        self.pushButton_5.clicked.connect(lambda: self.child_window(check=True))
         self.tableWidget.itemClicked.connect(self.get_product_id_and_price)
 
         self.retranslateUi(Dialog)
@@ -57,7 +57,7 @@ class Ui_Dialog(QtCore.QObject):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.pushButton.setText(_translate("Dialog", "Сохранить"))
+        self.pushButton.setText(_translate("Dialog", "На главное"))
         self.pushButton_2.setText(_translate("Dialog", "Добавить"))
         self.pushButton_3.setText(_translate("Dialog", "Удалить"))
         self.pushButton_4.setText(_translate("Dialog", "Редактировать"))
@@ -90,20 +90,28 @@ class Ui_Dialog(QtCore.QObject):
             description = self.tableWidget.item(row, 1).text()
             price = self.tableWidget.item(row, 2).text()
             product_id = db.get_id_product(title, description)
+
             return [product_id, price]
-    def create_lot(self):
-        product = self.get_product_id_and_price()
-        product_id = product[0]
-        price = product[1]
+
+    def child_window(self, check: bool = False):
         Dialog = QtWidgets.QDialog()
-        ui = create_lot.Ui_Dialog()
-        ui.setupUi(Dialog)
-        ui.table(product_id, price)
-        Dialog.exec_()
+        ui = product_child_window.Ui_Dialog()
+        if check == True:
+            ui.setupUi(Dialog, check)
+            product = self.get_product_id_and_price()
+            product_id = product[0]
+            price = product[1]
+            ui.table(product_id, price)
+            Dialog.exec_()
+        else:
+            ui.setupUi(Dialog, check)
+            ui.add_product_table()
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Accepted:
+                self.fill_product_table()
 
     def save_and_close(self):
-        self.lot_created.emit()
-        self.Dialog.close()
+        self.Dialog.accept()
 
 
 
