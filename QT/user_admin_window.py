@@ -60,7 +60,11 @@ class Ui_Dialog(object):
 
         self.pushButton.clicked.connect(functools.partial(self.add, 'add'))
         self.pushButton_2.clicked.connect(self.delete_User)
-        self.pushButton_3.clicked.connect(functools.partial(self.edit, 'edit'))
+        self.pushButton_3.clicked.connect(functools.partial(self.edit_user, 'edit'))
+
+        self.pushButton_7.clicked.connect(functools.partial(self.addAdmin, 'addAdmin'))
+        self.pushButton_8.clicked.connect(self.delete_Admin)
+        self.pushButton_5.clicked.connect(functools.partial(self.edit_admin, 'editAdmin'))
         self.tabWidget.setCurrentIndex(0)
         self.tableWidget.itemSelectionChanged.connect(self.click_of_table)
 
@@ -81,7 +85,7 @@ class Ui_Dialog(object):
         self.pushButton_8.setText(_translate("Dialog", "Удалить"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Администраторы"))
 
-    def edit(self, k):
+    def edit_user(self, k):
         row = Ui_Dialog.click_of_table(self)
         p = []
         for s in range(self.tableWidget.columnCount()):
@@ -93,6 +97,18 @@ class Ui_Dialog(object):
         if result == QtWidgets.QDialog.Rejected:
             self.fill_user_table()
 
+    def edit_admin(self, k):
+        row = Ui_Dialog.click_of_table_A(self)
+        p = []
+        for s in range(self.tableWidget_2.columnCount()):
+            p.append(self.tableWidget_2.item(row, s).text()) 
+        Dialog = QtWidgets.QDialog()
+        ui = create_lot_UA.Ui_Dialog(k, p)
+        ui.setupUi(Dialog)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Rejected:
+            self.fill_admin_table()
+
     def add(self, k):
         Dialog = QtWidgets.QDialog()
         ui = create_lot_UA.Ui_Dialog(k, None)
@@ -101,15 +117,31 @@ class Ui_Dialog(object):
         if result == QtWidgets.QDialog.Rejected:
             self.fill_user_table()
 
+    def addAdmin(self, k):
+        Dialog = QtWidgets.QDialog()
+        ui = create_lot_UA.Ui_Dialog(k, None)
+        ui.setupUi(Dialog)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Rejected:
+            self.fill_admin_table()
+
     def click_of_table(self):
-        print(self.tableWidget.currentRow())
-        return self.tableWidget.currentRow() # Номер строки
-        
+            return self.tableWidget.currentRow() # Номер строки
+    
+    def click_of_table_A(self):
+            return self.tableWidget_2.currentRow() # Номер строки
+
     def delete_User(self):
         row = Ui_Dialog.click_of_table(self)
         p = [self.tableWidget.item(row, 0).text(), self.tableWidget.item(row, 2).text(), self.tableWidget.item(row, 3).text()]
         db.delete_User_db(p)
         Ui_Dialog.fill_user_table(self)
+
+    def delete_Admin(self):
+        row = Ui_Dialog.click_of_table_A(self)
+        p = [self.tableWidget_2.item(row, 0).text(), self.tableWidget_2.item(row, 1).text(), self.tableWidget_2.item(row, 3).text()]
+        db.delete_Admin_db(p)
+        Ui_Dialog.fill_admin_table(self)
         
     def fill_user_table(self):
         users = db.get_user_data()

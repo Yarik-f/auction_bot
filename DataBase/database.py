@@ -348,7 +348,7 @@ class Database:
                                             ON Lots.lot_id = Auction_history.lot_id
                                         WHERE Lots.end_time < '{dt_now}'AND Auction_history.lot_id IS NULL""")
             table1NULL = table1NULL.fetchall()
-            print(table1NULL)
+
             return [table, tableNULL, table1, table1NULL]
 
 # Функция добавления значений в сам файл SQL               
@@ -356,11 +356,22 @@ class Database:
         with self.con:
             self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
                               values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""") # Происходит дабовления строки в SQL Таблицу  
+    
+    def add_user_A_db(self, data):
+        with self.con:
+            self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
+                              values('{data[0]}', '{data[1]}', {data[2]}, {data[3]}, {data[4]}, {data[5]})""") # Происходит дабовления строки в SQL Таблицу
 
     def delete_User_db(self, d):
         with self.con:
                 self.con.execute(f"""DELETE FROM Users  
                                      WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных  
+    
+    def delete_Admin_db(self, d):
+        with self.con:
+                self.con.execute(f"""DELETE FROM Admins  
+                                     WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных 
+                
     def edit_User_db(self, p, d):
         with self.con:
                 r = self.con.execute(f"""SELECT user_id FROM Users
@@ -369,7 +380,17 @@ class Database:
                 
                 self.con.execute(f"""UPDATE Users
                                         SET username = '{p[0]}', balance = {p[2]}, successful_bids = {p[3]}, auto_bid_access = {p[4]}, is_banned = {p[5]}
-                                        WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки      
+                                        WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки    
+
+    def edit_Admin_db(self, p, d):
+        with self.con:
+                r = self.con.execute(f"""SELECT admin_id FROM Admins
+                                            WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""") 
+                r = r.fetchall()
+                
+                self.con.execute(f"""UPDATE Admins
+                                        SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, balance = {p[3]},  commission_rate = {p[4]}, penalties = {p[5]}
+                                        WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки  
 db = Database()
 
 
@@ -466,7 +487,7 @@ data_db = {
     ]
 }
 
-# db.clear_data()
-# db.delete_table()
-# db.create_table()
-# db.fill_table(data_db)
+#db.clear_data()
+#db.delete_table()
+#db.create_table()
+#db.fill_table(data_db)
