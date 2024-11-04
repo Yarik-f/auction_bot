@@ -22,6 +22,18 @@ class Ui_Dialog(object):
         self.tableWidget.setGeometry(QtCore.QRect(20, 30, 1081, 211))
         self.tableWidget.setObjectName("tableWidget")
         if self.k == 'add': 
+            self.pushButton_2 = QtWidgets.QPushButton(Dialog)
+            self.pushButton_2.setGeometry(QtCore.QRect(50, 260, 50, 31))
+            font = QtGui.QFont()
+            font.setPointSize(10)
+            self.pushButton_2.setFont(font)
+            self.pushButton_2.setObjectName("pushButton_2")
+            self.pushButton_3 = QtWidgets.QPushButton(Dialog)
+            self.pushButton_3.setGeometry(QtCore.QRect(120, 260, 50, 31))
+            font = QtGui.QFont()
+            font.setPointSize(10)
+            self.pushButton_3.setFont(font)
+            self.pushButton_3.setObjectName("pushButton_3")
             self.tableWidget.setColumnCount(5)
             self.tableWidget.setRowCount(1)
             item = QtWidgets.QTableWidgetItem()
@@ -40,6 +52,10 @@ class Ui_Dialog(object):
             self.combo_box_2.addItems(['0', '1'])
             self.tableWidget.setCellWidget(0, 3, self.combo_box)
             self.tableWidget.setCellWidget(0, 4, self.combo_box_2)
+            
+
+            self.pushButton_2.clicked.connect(self.plus)
+            self.pushButton_3.clicked.connect(self.minus)
         elif self.k == 'edit':
             self.tableWidget.setColumnCount(6)
             self.tableWidget.setRowCount(1)
@@ -67,6 +83,7 @@ class Ui_Dialog(object):
 
 
         self.pushButton.clicked.connect(self.save)
+        
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -87,6 +104,8 @@ class Ui_Dialog(object):
             item.setText(_translate("MainWindow", "Авто ставка"))
             item = self.tableWidget.horizontalHeaderItem(4)
             item.setText(_translate("MainWindow", "Бан"))
+            self.pushButton_2.setText(_translate("Dialog", "+"))
+            self.pushButton_3.setText(_translate("Dialog", "-"))
         elif self.k == 'edit':
             item = self.tableWidget.horizontalHeaderItem(0)
             item.setText(_translate("MainWindow", "Телеграм пользователя"))
@@ -107,6 +126,22 @@ class Ui_Dialog(object):
         self.tableWidget.resizeColumnsToContents()
     
     
+    def plus(self):
+        rowPosition = self.tableWidget.rowCount() # Узнаем количества строк в таблице 
+        self.tableWidget.insertRow(rowPosition)
+        n = f"self.combo_box_{self.tableWidget.rowCount()+2}" 
+        n = QtWidgets.QComboBox(self.Dialog)
+        n.addItems(['0', '1'])
+        self.tableWidget.setCellWidget(self.tableWidget.rowCount()-1, 3, n)
+        n = f"self.combo_box_{self.tableWidget.rowCount()+3}" 
+        n = QtWidgets.QComboBox(self.Dialog)
+        n.addItems(['0', '1'])
+        self.tableWidget.setCellWidget(self.tableWidget.rowCount()-1, 4, n)
+
+    def minus(self):
+        if self.tableWidget.currentRow() > 0:        
+            row = self.tableWidget.currentRow() # Отслеживаем строчку нажатой ячейки 
+            self.tableWidget.removeRow(row) # Удаляем строчку и все элементы выбраной ячейки
         
 
     def save(self):

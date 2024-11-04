@@ -326,10 +326,10 @@ class Database:
                                             WHERE Lots.end_time > '{dt_now}' AND Bids.lot_id IS NULL
                                             """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             tableNULL = tableNULL.fetchall()
-
-            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Auction_history
-                                        INNER JOIN Lots 
-                                            ON Auction_history.lot_id = Lots.lot_id
+            
+            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Lots
+                                        INNER JOIN Auction_history 
+                                            ON Lots.lot_id = Auction_history.lot_id
                                         INNER JOIN Products 
                                             ON Lots.product_id = Products.product_id
                                         INNER JOIN Product_images 
@@ -338,7 +338,18 @@ class Database:
                                             ON Auction_history.winner_id = Users.user_id
                                         WHERE Lots.end_time < '{dt_now}'""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table1 = table1.fetchall()
-            return [table, tableNULL, table1]
+
+            table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status  FROM Lots
+                                        INNER JOIN Products 
+                                            ON Lots.product_id = Products.product_id
+                                        INNER JOIN Product_images 
+                                            ON Lots.product_id = Product_images.product_id
+                                        LEFT JOIN Auction_history 
+                                            ON Lots.lot_id = Auction_history.lot_id
+                                        WHERE Lots.end_time < '{dt_now}'AND Auction_history.lot_id IS NULL""")
+            table1NULL = table1NULL.fetchall()
+            print(table1NULL)
+            return [table, tableNULL, table1, table1NULL]
 
 # Функция добавления значений в сам файл SQL               
     def add_user_db(self, data):
