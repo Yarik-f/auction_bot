@@ -131,7 +131,7 @@ class Ui_Dialog(object):
                 else:
                     self.tableWidget.setItem(i, j, QTableWidgetItem(str(value)))
 
-        #item_is_not_editable(self.tableWidget)
+        item_is_not_editable(self.tableWidget)
 
         self.tableWidget.resizeColumnToContents(0)
         self.tableWidget.resizeColumnToContents(3)
@@ -150,7 +150,7 @@ class Ui_Dialog(object):
             for j, value in enumerate(admin):
                 self.tableWidget_2.setItem(i, j, QTableWidgetItem(str(value)))
 
-        #item_is_not_editable(self.tableWidget_2)
+        item_is_not_editable(self.tableWidget_2)
 
         self.tableWidget_2.resizeColumnToContents(0)
 
