@@ -8,7 +8,7 @@ db_path = os.path.join(script_dir, 'my_database.db')
 
 
 def item_is_not_editable(table):
-    for row in range(table.rowCount() - 1):
+    for row in range(table.rowCount()):
         for col in range(table.columnCount()):
             item = table.item(row, col)
             if item is not None:

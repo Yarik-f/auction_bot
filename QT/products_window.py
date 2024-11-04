@@ -68,6 +68,7 @@ class Ui_Dialog(object):
         self.pushButton_5.setText(_translate("Dialog", "Создать лот"))
 
     def fill_product_table(self):
+        self.tableWidget.clearContents()
         products = db.get_product_data()
 
         self.tableWidget.setRowCount(len(products))
@@ -131,7 +132,6 @@ class Ui_Dialog(object):
     def delete_product(self):
         selected_items = self.tableWidget.selectedItems()
         product = self.get_product()
-        print(product[0])
         if selected_items:
             db.delete_product_and_images(product[0])
             self.fill_product_table()
