@@ -241,7 +241,7 @@ class Ui_MainWindow(object):
     # Заполнение таблиц на главной страницы 
     def auction(self):
         home_page = db.Auction()
-        table, tableNULL, table1 = home_page[0], home_page[1], home_page[2]
+        table, tableNULL, table1, table1NULL = home_page[0], home_page[1], home_page[2], home_page[3]
         self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
         # Заполняем сталбцы с окончанием торгов и стартовую цену лота
         for k in range(len(table)):
@@ -263,8 +263,7 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
             
 
-        self.tableWidget_2.setRowCount(
-            len(table1))  # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
+        self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
         for k in range(len(table1)):
             self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
             self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
@@ -273,6 +272,15 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
             self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
             self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table1[k][6])))
+        for k in range(len(table1NULL)):
+            print(table1NULL)
+            self.tableWidget_2.setItem(k + len(table1), 0, QtWidgets.QTableWidgetItem(str(table1NULL[k][0])))
+            self.tableWidget_2.setItem(k + len(table1), 1, QtWidgets.QTableWidgetItem(str(table1NULL[k][1])))
+            self.tableWidget_2.setItem(k + len(table1), 2, QtWidgets.QTableWidgetItem(str(table1NULL[k][2])))
+            self.tableWidget_2.setItem(k + len(table1), 3, QtWidgets.QTableWidgetItem(str(table1NULL[k][3])))
+            self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
+            self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
+            self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
 
         self.tableWidget.resizeColumnsToContents()
         self.tableWidget_2.resizeColumnsToContents()
