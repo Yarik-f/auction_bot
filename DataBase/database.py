@@ -260,6 +260,32 @@ class Database:
                          [image_pt, product_id])
         self.con.commit()
 
+    def update_product(self, product_id, title, description, price, quantity, location):
+        query = """UPDATE Products 
+                   SET title = ?, description = ?, price = ?, quantity = ?, location = ? 
+                   WHERE product_id = ?"""
+        self.con.execute(query, (title, description, price, quantity, location, product_id))
+        self.con.commit()
+
+    def update_product_image(self, image_path, product_id):
+        query = """UPDATE Product_images 
+                   SET image_pt = ? 
+                   WHERE product_id = ?"""
+        self.con.execute(query, (image_path, product_id))
+        self.con.commit()
+    def delete_product_and_images(self, product_id):
+
+        self.con.execute("BEGIN TRANSACTION")
+
+        delete_images_query = """DELETE FROM Product_images WHERE product_id = ?"""
+        self.con.execute(delete_images_query, (product_id,))
+
+        delete_product_query = """DELETE FROM Products WHERE product_id = ?"""
+        self.con.execute(delete_product_query, (product_id,))
+
+        self.con.commit()
+        self.con.rollback()
+
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')

@@ -50,7 +50,7 @@ class Choose_Image(QtWidgets.QWidget):
             "Изображения (*.png *.jpg *.jpeg *.bmp);;Все файлы (*)"
         )
         if file_path:
-            self.link = file_path
+            self.lineEdit = file_path
             self.Dialog.accept()
 
     def get_link(self):

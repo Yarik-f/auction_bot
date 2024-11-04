@@ -1,5 +1,7 @@
+import functools
+
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QTableWidgetItem, QDialog
+from PyQt5.QtWidgets import QTableWidgetItem, QDialog, QMessageBox
 import product_child_window
 
 from DataBase.database import db, item_is_not_editable
@@ -47,9 +49,11 @@ class Ui_Dialog(object):
         self.pushButton_5.setObjectName("pushButton_5")
 
         self.pushButton.clicked.connect(self.save_and_close)
-        self.pushButton_2.clicked.connect(self.child_window)
-        self.pushButton_5.clicked.connect(lambda: self.child_window(check=True))
-        self.tableWidget.itemClicked.connect(self.get_product_id_and_price)
+        self.pushButton_2.clicked.connect(functools.partial(self.child_window, 'add'))
+        self.pushButton_3.clicked.connect(self.delete_product)
+        self.pushButton_4.clicked.connect(functools.partial(self.child_window, 'edit'))
+        self.pushButton_5.clicked.connect(functools.partial(self.child_window, 'create'))
+        self.tableWidget.itemClicked.connect(self.get_product)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -83,33 +87,56 @@ class Ui_Dialog(object):
         self.tableWidget.resizeColumnToContents(4)
         self.tableWidget.resizeColumnToContents(5)
 
-    def get_product_id_and_price(self):
+    def get_product(self):
         row = self.tableWidget.currentRow()
         if row != -1:
             title = self.tableWidget.item(row, 0).text()
             description = self.tableWidget.item(row, 1).text()
             price = self.tableWidget.item(row, 2).text()
+            quantity = self.tableWidget.item(row, 3).text()
+            location = self.tableWidget.item(row, 4).text()
+            image_path = self.tableWidget.item(row, 5).text()
             product_id = db.get_id_product(title, description)
 
-            return [product_id, price]
+            return [product_id, title, description, price, quantity, location, image_path]
 
-    def child_window(self, check: bool = False):
+    def child_window(self, check):
+        selected_items = self.tableWidget.selectedItems()
+        product = self.get_product()
         Dialog = QtWidgets.QDialog()
         ui = product_child_window.Ui_Dialog()
-        if check == True:
-            ui.setupUi(Dialog, check)
-            product = self.get_product_id_and_price()
-            product_id = product[0]
-            price = product[1]
-            ui.table(product_id, price)
+        ui.setupUi(Dialog, check, product[0])
+        if check == 'create' and selected_items:
+            price = product[3]
+            ui.table(price)
             Dialog.exec_()
-        else:
-            ui.setupUi(Dialog, check)
-            ui.add_product_table()
+        elif check == 'edit' and selected_items:
+            title = product[1]
+            description = product[2]
+            price = product[3]
+            quantity = product[4]
+            location = product[5]
+            image_path = product[6]
+            ui.edit_table(title, description, price, quantity, location, image_path)
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Accepted:
                 self.fill_product_table()
+        elif check == 'add':
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Accepted:
+                self.fill_product_table()
+        else:
+            QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
 
+    def delete_product(self):
+        selected_items = self.tableWidget.selectedItems()
+        product = self.get_product()
+        print(product[0])
+        if selected_items:
+            db.delete_product_and_images(product[0])
+            self.fill_product_table()
+        else:
+            QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
     def save_and_close(self):
         self.Dialog.accept()
 
