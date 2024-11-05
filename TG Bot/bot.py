@@ -1,7 +1,6 @@
 import telebot
 from telebot import types
-from py_currency_converter import convert
-from _datetime import datetime
+from DataBase.database import db
 
 #бот
 bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
@@ -10,8 +9,11 @@ bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
 user_balances = {}
 
 
+def add_user(username):
+    db.add_user(username)
+
 @bot.message_handler(commands=['start'])
-def main(message):
+def start_command(message):
     user_id = message.chat.id
     if user_id not in user_balances:
         user_balances[user_id] = 0  # Изначальный баланс 0
@@ -20,7 +22,12 @@ def main(message):
     button.add(types.KeyboardButton('Баланс'), types.KeyboardButton('Пополнить баланс'),
                types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
 
-    bot.send_message(message.chat.id, 'Привет! Выберите действие:', reply_markup=button)
+    username = message.from_user.username or str(message.from_user.id)
+    name = message.from_user.first_name
+    add_user(username)
+
+    bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
+
 
 
 # Обработка для кнопки "Баланс"
@@ -53,4 +60,6 @@ def deposit_balance(message):
         bot.send_message(message.chat.id, 'Ошибка: введите числовое значение для пополнения баланса.')
 
 
-bot.infinity_polling()
+if __name__ == '__main__':
+    print("Бот запущен...")
+    bot.infinity_polling()
