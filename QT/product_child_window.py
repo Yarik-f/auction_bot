@@ -92,7 +92,7 @@ class Ui_Dialog(object):
 
             db.create_lot(product_id, starting_price, seller_id, start_time, end_time, document_type, status)
 
-            self.Dialog.close()
+            self.Dialog.accept()
 
     def add_product_button(self):
         row = self.tableWidget.currentRow()
