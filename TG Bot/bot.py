@@ -27,11 +27,11 @@ def main(message):
 @bot.message_handler(func=lambda message: message.text == 'Баланс')
 def show_balance(message):
     user_id = message.chat.id
-    balance = user_balances.get(user_id, 0)  # Получаем баланс пользователя или 0, если его нет
+    balance = user_balances.get(user_id, 0)  # Получаем баланс пользователя
     bot.send_message(message.chat.id, f'Ваш текущий баланс: {balance} у.е.')
 
 
-# Обработчик для кнопки "Пополнить баланс"
+# Обработка для кнопки "Пополнить баланс"
 @bot.message_handler(func=lambda message: message.text == 'Пополнить баланс')
 def request_deposit(message):
     msg = bot.send_message(message.chat.id, 'Введите сумму для пополнения баланса:')
