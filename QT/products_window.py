@@ -106,7 +106,12 @@ class Ui_Dialog(object):
         product = self.get_product()
         Dialog = QtWidgets.QDialog()
         ui = product_child_window.Ui_Dialog()
-        ui.setupUi(Dialog, check, product[0])
+        print(selected_items)
+        if product == None:
+            ui.setupUi(Dialog, check)
+        else:
+            ui.setupUi(Dialog, check, product[0])
+
         if check == 'create' and selected_items:
             price = product[3]
             ui.table(price)

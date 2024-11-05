@@ -20,7 +20,7 @@ class Database:
         self.con = sql.connect(db_path)
 
     def create_table(self):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             self.con.execute('''
                 CREATE TABLE IF NOT EXISTS Roles (
                 role_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -286,6 +286,22 @@ class Database:
         self.con.commit()
         self.con.rollback()
 
+    def add_user(self, username):
+        with sql.connect(db_path) as self.con:
+            user_id = self.check_user(username)
+            if user_id is None:
+                sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
+                self.con.execute(sql_insert_users,
+                                    [username, 1, 0, 0, 0, 0])
+                self.con.commit()
+            else:
+                print('Пользователь уже существует')
+    def check_user(self, username):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT * FROM Users WHERE username = ?"
+            data = self.con.execute(query, (username,)).fetchone()
+            return data
+
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
@@ -487,7 +503,7 @@ data_db = {
     ]
 }
 
-#db.clear_data()
-#db.delete_table()
-#db.create_table()
-#db.fill_table(data_db)
+# db.clear_data()
+# db.delete_table()
+# db.create_table()
+# db.fill_table(data_db)
