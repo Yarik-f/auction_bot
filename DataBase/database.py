@@ -18,7 +18,6 @@ def item_is_not_editable(table):
 class Database:
     def __init__(self):
         self.con = sql.connect(db_path)
-
     def create_table(self):
         with sql.connect(db_path) as self.con:
             self.con.execute('''
@@ -138,11 +137,9 @@ class Database:
                 FOREIGN KEY (buyer_id) REFERENCES Users(user_id)
                 )
                 ''')
-
     def get_data(self, table, name_table, data):
         for item in data[name_table]:
             self.con.execute(table, item)
-
     def fill_table(self, data):
         sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
@@ -168,7 +165,6 @@ class Database:
         self.get_data(sql_insert_strikes, 'strikes', data)
         self.get_data(sql_insert_transfer_documents, 'transfer_documents', data)
         self.con.commit()
-
     def clear_data(self):
         with self.con:
             self.con.execute("DELETE FROM Roles")
@@ -183,7 +179,6 @@ class Database:
             self.con.execute("DELETE FROM Strikes")
             self.con.execute("DELETE FROM Transfer_documents")
         self.con.commit()
-
     def delete_table(self):
         with self.con:
             self.con.execute("DROP TABLE IF EXISTS Roles")
@@ -198,12 +193,10 @@ class Database:
             self.con.execute("DROP TABLE IF EXISTS Strikes")
             self.con.execute("DROP TABLE IF EXISTS Transfer_documents")
         self.con.commit()
-
     def get_table_data(self, table_name):
         data = self.con.execute(f'''SELECT * FROM {table_name}''')
         data = data.fetchall()
         return data
-
     def get_user_data(self):
         data = self.con.execute('''
             SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
@@ -213,7 +206,6 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-
     def get_admin_data(self):
         data = self.con.execute('''
             SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
@@ -222,7 +214,6 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-
     def get_product_data(self):
         data = self.con.execute('''
             SELECT p.title, p.description, p.price, p.location, i.image_pt
@@ -231,7 +222,6 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-
     def get_id_product(self, title, description):
         title = f'{title}'
         description = f'{description}'
@@ -241,13 +231,11 @@ class Database:
             WHERE title = ? AND description = ?'''
         data = self.con.execute(query, (title, description)).fetchone()
         return data[0]
-
     def create_lot(self, product_id, starting_price, seller_id, start_time, end_time, document_type, status):
         sql_insert_lots = "INSERT OR IGNORE INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
         self.con.execute(sql_insert_lots,
                          [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
         self.con.commit()
-
     def add_product(self, title, description, price, location):
         sql_insert_products = "INSERT INTO Products (title, description, price, location) values(?, ?, ?, ?)"
         self.con.execute(sql_insert_products,
@@ -258,14 +246,12 @@ class Database:
         self.con.execute(sql_insert_product_images,
                          [image_pt, product_id])
         self.con.commit()
-
     def update_product(self, product_id, title, description, price, location):
         query = """UPDATE Products 
                    SET title = ?, description = ?, price = ?, location = ? 
                    WHERE product_id = ?"""
         self.con.execute(query, (title, description, price, location, product_id))
         self.con.commit()
-
     def update_product_image(self, image_path, product_id):
         query = """UPDATE Product_images 
                    SET image_pt = ? 
@@ -284,7 +270,6 @@ class Database:
 
         self.con.commit()
         self.con.rollback()
-
     def add_user(self, username):
         with sql.connect(db_path) as self.con:
             sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
@@ -292,7 +277,6 @@ class Database:
                                 [username, 1, 0, 0, 0, 0])
             self.con.commit()
             self.check_user(username)
-
     def check_role(self, name_table, username):
         with sql.connect(db_path) as self.con:
             query = f"SELECT role_id FROM {name_table} WHERE username = ?"
@@ -320,7 +304,6 @@ class Database:
                 return role
             else:
                 print('Ошибка')
-
     def get_lot_data(self):
         with sql.connect(db_path) as self.con:
             query = f"""
@@ -333,11 +316,6 @@ class Database:
             data = self.con.execute(query).fetchall()
             return data
 
-    def get_image_url(self, product_id):
-        with sql.connect(db_path) as self.con:
-            query = "SELECT image_pt FROM Product_images WHERE product_id = ?"
-            data = self.con.execute(query, (product_id,)).fetchone()
-            return data[0]
 
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
@@ -353,7 +331,6 @@ class Database:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
-
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
@@ -403,28 +380,23 @@ class Database:
             table1NULL = table1NULL.fetchall()
 
             return [table, tableNULL, table1, table1NULL]
-
 # Функция добавления значений в сам файл SQL               
     def add_user_db(self, data):
         with self.con:
             self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
-                              values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""") # Происходит дабовления строки в SQL Таблицу  
-    
+                              values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""") # Происходит дабовления строки в SQL Таблицу
     def add_user_A_db(self, data):
         with self.con:
             self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
                               values('{data[0]}', '{data[1]}', {data[2]}, {data[3]}, {data[4]}, {data[5]})""") # Происходит дабовления строки в SQL Таблицу
-
     def delete_User_db(self, d):
         with self.con:
                 self.con.execute(f"""DELETE FROM Users  
-                                     WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных  
-    
+                                     WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
     def delete_Admin_db(self, d):
         with self.con:
                 self.con.execute(f"""DELETE FROM Admins  
-                                     WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных 
-                
+                                     WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
     def edit_User_db(self, p, d):
         with self.con:
                 r = self.con.execute(f"""SELECT user_id FROM Users
@@ -433,8 +405,7 @@ class Database:
                 
                 self.con.execute(f"""UPDATE Users
                                         SET username = '{p[0]}', balance = {p[2]}, successful_bids = {p[3]}, auto_bid_access = {p[4]}, is_banned = {p[5]}
-                                        WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки    
-
+                                        WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
     def edit_Admin_db(self, p, d):
         with self.con:
                 r = self.con.execute(f"""SELECT admin_id FROM Admins
@@ -443,9 +414,10 @@ class Database:
                 
                 self.con.execute(f"""UPDATE Admins
                                         SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, balance = {p[3]},  commission_rate = {p[4]}, penalties = {p[5]}
-                                        WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки  
-db = Database()
+                                        WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
 
+
+db = Database()
 
 data_db = {
     "roles": [
