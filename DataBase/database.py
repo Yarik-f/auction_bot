@@ -291,6 +291,7 @@ class Database:
             self.con.execute(sql_insert_users,
                                 [username, 1, 0, 0, 0, 0])
             self.con.commit()
+            self.check_user(username)
 
     def check_role(self, name_table, username):
         with sql.connect(db_path) as self.con:
@@ -308,6 +309,8 @@ class Database:
             print(data_admin)
             if data_user is None and data_admin is None:
                 self.add_user(username)
+                role = self.check_role('Users', username)
+                return role
             elif data_user and data_admin is None:
                 print(data_user[0])
                 role = self.check_role('Users', data_user[0])
@@ -317,6 +320,24 @@ class Database:
                 return role
             else:
                 print('Ошибка')
+
+    def get_lot_data(self):
+        with sql.connect(db_path) as self.con:
+            query = f"""
+                SELECT l.lot_id, l.starting_price, l.start_time, p.title, p.description, p.location, i.image_pt
+                FROM Lots l
+                JOIN Products p ON l.product_id = p.product_id
+                JOIN Product_images i ON p.product_id = i.product_id
+                WHERE l.status = 'В процессе'
+            """
+            data = self.con.execute(query).fetchall()
+            return data
+
+    def get_image_url(self, product_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT image_pt FROM Product_images WHERE product_id = ?"
+            data = self.con.execute(query, (product_id,)).fetchone()
+            return data[0]
 
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
@@ -464,13 +485,13 @@ data_db = {
         ('tg7', "http://example.com/images/vase.jpg", 7),
     ],
     "lots": [
-        (1, 1500.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Стандартный", "В процессе"),
-        (2, 750.50, 2, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Ювелирный", "В процессе"),
-        (3, 250.00, 2, "2024-10-24 10:00:00", "2024-11-29 10:00:00", "Стандартный", "В процессе"),
-        (4, 300.00, 2, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Историч ценный", "В процессе"),
-        (5, 500.00, 1, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "В процессе"),
-        (6, 1200.00, 1, "2024-10-24 10:00:00", "2024-10-30 10:00:00", "Историч ценный", "В процессе"),
-        (7, 400.00, 2, "2024-10-24 10:00:00", "2024-11-30 10:00:00", "Стандартный", "В процессе"),
+        (1, 1500.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Стандартный", "Продан"),
+        (2, 750.50, 2, "2024-10-24 10:00", "2024-10-30 10:00", "Ювелирный", "Продан"),
+        (3, 250.00, 2, "2024-10-24 10:00", "2024-11-02 10:00", "Стандартный", "Продан"),
+        (4, 300.00, 2, "2024-10-24 10:00", "2024-11-05 10:00", "Историч ценный", "Продан"),
+        (5, 500.00, 1, "2024-10-24 10:00", "2024-11-01 10:00", "Стандартный", "Продан"),
+        (6, 1200.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Историч ценный", "Продан"),
+        (7, 400.00, 2, "2024-10-24 10:00", "2024-11-03 10:00", "Стандартный", "Продан"),
     ],
     "bids": [
         (1, 1, 1550.00),

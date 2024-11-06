@@ -4,10 +4,7 @@ from datetime import datetime, timedelta
 from choose_image import Choose_Image
 from DataBase.database import db
 
-start_time = datetime.now()
-end_time = start_time + timedelta(days=3)
-start_time = start_time.strftime('%Y-%m-%d %H:%M:%S')
-end_time = end_time.strftime('%Y-%m-%d %H:%M:%S')
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog, check, product_id=None):
         self.product_id = product_id
@@ -69,7 +66,11 @@ class Ui_Dialog(object):
 
 
     def table(self, price):
-
+        start_time = datetime.now()
+        end_time = start_time + timedelta(days=3)
+        start_time = start_time.strftime('%Y-%m-%d %H:%M')
+        print(start_time)
+        end_time = end_time.strftime('%Y-%m-%d %H:%M')
         self.tableWidget.setItem(0,0, QTableWidgetItem(str(self.product_id)))
         self.tableWidget.setItem(0,1, QTableWidgetItem(price))
         self.tableWidget.setItem(0,2, QTableWidgetItem(str(1)))
@@ -134,7 +135,7 @@ class Ui_Dialog(object):
 
 
     def choose_image(self, row, column):
-        if row == 0 and column == 5:
+        if row == 0 and column == 4:
             choose_image = QtWidgets.QDialog()
             ui = Choose_Image()
             ui.setupUi(choose_image)

@@ -1,13 +1,65 @@
+import threading
+import time
+from datetime import datetime, timedelta
+import os
+
 import telebot
 from telebot import types
 from DataBase.database import db
 
 #бот
 bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
+channel_id = '@aucton_bot'
 
 #Хранение баланса пользователей
 user_balances = {}
 
+
+
+
+
+def send_lot_at_time(lot_data):
+    message_text, image_path, target_time = lot_data
+
+    delay = (target_time - datetime.now()).total_seconds()
+    if delay >= 0:
+        time.sleep(delay)
+
+    if image_path.startswith('http://') or image_path.startswith('https://'):
+        bot.send_photo(chat_id=channel_id, photo=image_path, caption=message_text)
+    elif os.path.isfile(image_path):
+        with open(image_path, 'rb') as photo:
+            bot.send_photo(chat_id=channel_id, photo=photo, caption=message_text)
+    else:
+        print("Ошибка: Неверный путь к изображению")
+
+
+def send_auction_lot():
+    processed_lots = set()
+
+    while True:
+        lots = db.get_lot_data()
+        for lot in lots:
+            lot_id, starting_price, start_time, title, description, location, image_path = lot
+            if lot_id in processed_lots:
+                continue
+
+            target_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
+            time_send = datetime.now() - target_time
+            if 0 <= time_send.total_seconds() <= 300:
+                message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСтартовая цена: {starting_price}\nТекущая ставка: Пока что хз'
+                lot_data = (message, image_path, datetime.now())
+                threading.Thread(target=send_lot_at_time, args=(lot_data,)).start()
+                processed_lots.add(lot_id)
+            elif target_time > datetime.now():
+                message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСтартовая цена: {starting_price}\nТекущая ставка: Пока что хз'
+                lot_data = (message, image_path, target_time)
+                threading.Thread(target=send_lot_at_time, args=(lot_data,)).start()
+                processed_lots.add(lot_id)
+
+        time.sleep(10)
+
+threading.Thread(target=send_auction_lot, daemon=True).start()
 
 
 @bot.message_handler(commands=['start'])
@@ -25,7 +77,7 @@ def start_command(message):
                    types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
 
         name = message.from_user.first_name
-        bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
+        bot.send_message(message.chat.id, f'Привет, {name}!\nПереходи по ссылке в канал https://t.me/+qaZa5fdmZyU2NGNi:', reply_markup=button)
 
     elif check == 2 or check == 3:
         button = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -36,7 +88,6 @@ def start_command(message):
 
     else:
         bot.send_message(message.chat.id, f'Привет, нет данных {check}')
-
 
 
 
