@@ -288,19 +288,36 @@ class Database:
 
     def add_user(self, username):
         with sql.connect(db_path) as self.con:
-            user_id = self.check_user(username)
-            if user_id is None:
-                sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
-                self.con.execute(sql_insert_users,
-                                    [username, 1, 0, 0, 0, 0])
-                self.con.commit()
-            else:
-                print('Пользователь уже существует')
+            sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
+            self.con.execute(sql_insert_users,
+                                [username, 1, 0, 0, 0, 0])
+            self.con.commit()
+
+    def check_role(self, name_table, username):
+        with sql.connect(db_path) as self.con:
+            query = f"SELECT role_id FROM {name_table} WHERE username = ?"
+            data = self.con.execute(query, (username,)).fetchone()
+            print(data[0])
+            return data[0]
     def check_user(self, username):
         with sql.connect(db_path) as self.con:
-            query = "SELECT * FROM Users WHERE username = ?"
-            data = self.con.execute(query, (username,)).fetchone()
-            return data
+            user_query = "SELECT username FROM Users WHERE username = ?"
+            data_user = self.con.execute(user_query, (username,)).fetchone()
+            print(data_user)
+            admin_query = "SELECT username FROM Admins WHERE username = ?"
+            data_admin = self.con.execute(admin_query, (username,)).fetchone()
+            print(data_admin)
+            if data_user is None and data_admin is None:
+                self.add_user(username)
+            elif data_user and data_admin is None:
+                print(data_user[0])
+                role = self.check_role('Users', data_user[0])
+                return role
+            elif data_admin and data_user is None:
+                role = self.check_role('Admins', data_admin[0])
+                return role
+            else:
+                print('Ошибка')
 
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:

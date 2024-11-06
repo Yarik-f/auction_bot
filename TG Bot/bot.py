@@ -9,24 +9,34 @@ bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
 user_balances = {}
 
 
-def add_user(username):
-    db.add_user(username)
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    user_id = message.chat.id
-    if user_id not in user_balances:
-        user_balances[user_id] = 0  # Изначальный баланс 0
-
-    button = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button.add(types.KeyboardButton('Баланс'), types.KeyboardButton('Пополнить баланс'),
-               types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
-
     username = message.from_user.username or str(message.from_user.id)
-    name = message.from_user.first_name
-    add_user(username)
+    check = db.check_user(username)
+    print(check)
+    if check == 1:
+        user_id = message.chat.id
+        if user_id not in user_balances:
+            user_balances[user_id] = 0  # Изначальный баланс 0
 
-    bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
+        button = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        button.add(types.KeyboardButton('Баланс'), types.KeyboardButton('Пополнить баланс'),
+                   types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
+
+        name = message.from_user.first_name
+        bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
+
+    elif check == 2 or check == 3:
+        button = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        button.add(types.KeyboardButton('БУГАГАГАГА'), types.KeyboardButton('Пополнить баланс'),
+                   types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
+        name = message.from_user.first_name
+        bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
+
+    else:
+        bot.send_message(message.chat.id, f'Привет, нет данных {check}')
+
 
 
 
