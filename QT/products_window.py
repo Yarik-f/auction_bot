@@ -73,7 +73,7 @@ class Ui_Dialog(object):
 
         self.tableWidget.setRowCount(len(products))
 
-        table_column = ["Название", "Описание", "Цена", "Количество", "Местоположение", 'Ссылка на фото']
+        table_column = ["Название", "Описание", "Цена", "Местоположение", 'Ссылка на фото']
 
         self.tableWidget.setColumnCount(len(table_column))
         self.tableWidget.setHorizontalHeaderLabels(table_column)
@@ -85,8 +85,8 @@ class Ui_Dialog(object):
         item_is_not_editable(self.tableWidget)
         self.tableWidget.resizeColumnToContents(0)
         self.tableWidget.resizeColumnToContents(1)
+        self.tableWidget.resizeColumnToContents(3)
         self.tableWidget.resizeColumnToContents(4)
-        self.tableWidget.resizeColumnToContents(5)
 
     def get_product(self):
         row = self.tableWidget.currentRow()
@@ -94,12 +94,11 @@ class Ui_Dialog(object):
             title = self.tableWidget.item(row, 0).text()
             description = self.tableWidget.item(row, 1).text()
             price = self.tableWidget.item(row, 2).text()
-            quantity = self.tableWidget.item(row, 3).text()
-            location = self.tableWidget.item(row, 4).text()
-            image_path = self.tableWidget.item(row, 5).text()
+            location = self.tableWidget.item(row, 3).text()
+            image_path = self.tableWidget.item(row, 4).text()
             product_id = db.get_id_product(title, description)
 
-            return [product_id, title, description, price, quantity, location, image_path]
+            return [product_id, title, description, price, location, image_path]
 
     def child_window(self, check):
         selected_items = self.tableWidget.selectedItems()
@@ -120,10 +119,9 @@ class Ui_Dialog(object):
             title = product[1]
             description = product[2]
             price = product[3]
-            quantity = product[4]
-            location = product[5]
-            image_path = product[6]
-            ui.edit_table(title, description, price, quantity, location, image_path)
+            location = product[4]
+            image_path = product[5]
+            ui.edit_table(title, description, price, location, image_path)
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Accepted:
                 self.fill_product_table()

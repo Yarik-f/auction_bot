@@ -58,7 +58,6 @@ class Database:
                 title VARCHAR(100) NOT NULL,
                 description TEXT,
                 price DECIMAL NOT NULL,
-                quantity INTEGER NOT NULL,
                 location VARCHAR(50) NOT NULL
                 )
                 ''')
@@ -148,7 +147,7 @@ class Database:
         sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
         sql_insert_admins = "INSERT INTO Admins (username, password, balance, role_id, commission_rate, penalties) values(?, ?, ?, ?, ?, ?)"
-        sql_insert_products = "INSERT INTO Products (title, description, price, quantity, location) values(?, ?, ?, ?, ?)"
+        sql_insert_products = "INSERT INTO Products (title, description, price, location) values(?, ?, ?, ?)"
         sql_insert_product_images = "INSERT INTO Product_images (image_tg, image_pt, product_id) values(?, ?, ?)"
         sql_insert_lots = "INSERT INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
         sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount) values(?, ?, ?)"
@@ -226,7 +225,7 @@ class Database:
 
     def get_product_data(self):
         data = self.con.execute('''
-            SELECT p.title, p.description, p.price, p.quantity, p.location, i.image_pt
+            SELECT p.title, p.description, p.price, p.location, i.image_pt
             FROM Product_images i
             JOIN Products p ON i.product_id = p.product_id
         ''')
@@ -249,10 +248,10 @@ class Database:
                          [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
         self.con.commit()
 
-    def add_product(self, title, description, price, quantity, location):
-        sql_insert_products = "INSERT INTO Products (title, description, price, quantity, location) values(?, ?, ?, ?, ?)"
+    def add_product(self, title, description, price, location):
+        sql_insert_products = "INSERT INTO Products (title, description, price, location) values(?, ?, ?, ?)"
         self.con.execute(sql_insert_products,
-                         [title, description, price, quantity, location])
+                         [title, description, price, location])
         self.con.commit()
     def add_product_image(self, image_pt, product_id):
         sql_insert_product_images = "INSERT INTO Product_images (image_pt, product_id) values(?, ?)"
@@ -260,11 +259,11 @@ class Database:
                          [image_pt, product_id])
         self.con.commit()
 
-    def update_product(self, product_id, title, description, price, quantity, location):
+    def update_product(self, product_id, title, description, price, location):
         query = """UPDATE Products 
-                   SET title = ?, description = ?, price = ?, quantity = ?, location = ? 
+                   SET title = ?, description = ?, price = ?, location = ? 
                    WHERE product_id = ?"""
-        self.con.execute(query, (title, description, price, quantity, location, product_id))
+        self.con.execute(query, (title, description, price, location, product_id))
         self.con.commit()
 
     def update_product_image(self, image_path, product_id):
@@ -447,13 +446,13 @@ data_db = {
         ("admin", "root", 850, 3, 2.0, 0),
     ],
     "products": [
-        ("Картина", "Красивая картина маслом.", 1500.00, 1, 'Moscow'),
-        ("Часы", "Стильные наручные часы.", 750.50, 5, 'Minsk'),
-        ("Серебряная ложка", "Ложка из чистого серебра.", 250.00, 10, 'Vitebsk'),
-        ("Статуэтка", "Статуэтка ручной работы.", 300.00, 2, 'Grodno'),
-        ("Книга", "Редкое издание книги.", 500.00, 3, 'Praga'),
-        ("Монета", "Антикварная монета.", 1200.00, 1, 'Berlin'),
-        ("Ваза", "Стеклянная ваза ручной работы.", 400.00, 4, 'Moscow'),
+        ("Картина", "Красивая картина маслом.", 1500.00, 'Moscow'),
+        ("Часы", "Стильные наручные часы.", 750.50, 'Minsk'),
+        ("Серебряная ложка", "Ложка из чистого серебра.", 250.00, 'Vitebsk'),
+        ("Статуэтка", "Статуэтка ручной работы.", 300.00, 'Grodno'),
+        ("Книга", "Редкое издание книги.", 500.00, 'Praga'),
+        ("Монета", "Антикварная монета.", 1200.00, 'Berlin'),
+        ("Ваза", "Стеклянная ваза ручной работы.", 400.00, 'Moscow'),
     ],
     "product_images": [
         ('tg1', "http://example.com/images/painting.jpg", 1),

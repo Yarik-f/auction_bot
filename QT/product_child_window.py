@@ -40,9 +40,9 @@ class Ui_Dialog(object):
 
             self.pushButton.clicked.connect(self.create)
         else:
-            self.tableWidget.setColumnCount(6)
+            self.tableWidget.setColumnCount(5)
             self.tableWidget.setRowCount(1)
-            table_column = ["Название", "Описание", "Цена", "Количество", "Местоположение", 'Ссылка на фото']
+            table_column = ["Название", "Описание", "Цена", "Местоположение", 'Ссылка на фото']
             self.tableWidget.setHorizontalHeaderLabels(table_column)
 
             self.tableWidget.cellDoubleClicked.connect(self.choose_image)
@@ -100,33 +100,33 @@ class Ui_Dialog(object):
             title = self.tableWidget.item(0, 0).text()
             description = self.tableWidget.item(0, 1).text()
             price = self.tableWidget.item(0, 2).text()
-            quantity = self.tableWidget.item(0, 3).text()
-            location = self.tableWidget.item(0, 4).text()
-            image_path = self.tableWidget.item(0, 5).text()
-            db.add_product(title, description, price, quantity, location)
+            location = self.tableWidget.item(0, 3).text()
+            image_path = self.tableWidget.item(0, 4).text()
+            db.add_product(title, description, price, location)
             product_id = db.get_id_product(title, description)
             db.add_product_image(image_path, product_id)
             self.Dialog.accept()
 
 
-    def edit_table(self, title, description, price, quantity, location, image_path):
+    def edit_table(self, title, description, price, location, image_path):
         self.tableWidget.setItem(0, 0, QTableWidgetItem(title))
         self.tableWidget.setItem(0, 1, QTableWidgetItem(description))
         self.tableWidget.setItem(0, 2, QTableWidgetItem(price))
-        self.tableWidget.setItem(0, 3, QTableWidgetItem(quantity))
-        self.tableWidget.setItem(0, 4, QTableWidgetItem(location))
-        self.tableWidget.setItem(0, 5, QTableWidgetItem(image_path))
+        self.tableWidget.setItem(0, 3, QTableWidgetItem(location))
+        self.tableWidget.setItem(0, 4, QTableWidgetItem(image_path))
+
+        self.tableWidget.resizeColumnToContents(1)
+        self.tableWidget.resizeColumnToContents(3)
+        self.tableWidget.resizeColumnToContents(4)
 
     def edit_product_button(self):
             title = self.tableWidget.item(0, 0).text()
             description = self.tableWidget.item(0, 1).text()
             price = self.tableWidget.item(0, 2).text()
-            quantity = self.tableWidget.item(0, 3).text()
-            location = self.tableWidget.item(0, 4).text()
-            image_path = self.tableWidget.item(0, 5).text()
+            location = self.tableWidget.item(0, 3).text()
+            image_path = self.tableWidget.item(0, 4).text()
 
-            db.update_product(self.product_id, title=title, description=description, price=price, quantity=quantity,
-                              location=location)
+            db.update_product(self.product_id, title=title, description=description, price=price, location=location)
 
             db.update_product_image(image_path, self.product_id)
 
