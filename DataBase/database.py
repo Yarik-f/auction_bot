@@ -325,10 +325,8 @@ class Database:
         dt_now = (datetime.datetime.now())  # Определяем текущее время
         with self.con:
             table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
-                                            INNER JOIN Products 
-                                                ON Lots.product_id = Products.product_id
-                                            INNER JOIN Product_images 
-                                                ON Lots.product_id = Product_images.product_id
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
                                             INNER JOIN Bids 
                                                 ON Lots.lot_id = Bids.lot_id
                                             WHERE Lots.end_time > '{dt_now}'
@@ -336,10 +334,8 @@ class Database:
             table = table.fetchall()
 
             tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time FROM Lots
-                                            INNER JOIN Products 
-                                                ON Lots.product_id = Products.product_id
-                                            INNER JOIN Product_images 
-                                                ON Lots.product_id = Product_images.product_id
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
                                             LEFT JOIN Bids 
                                                 ON Bids.lot_id = Lots.lot_id
                                             WHERE Lots.end_time > '{dt_now}' AND Bids.lot_id IS NULL
@@ -349,20 +345,16 @@ class Database:
             table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Lots
                                         INNER JOIN Auction_history 
                                             ON Lots.lot_id = Auction_history.lot_id
-                                        INNER JOIN Products 
-                                            ON Lots.product_id = Products.product_id
-                                        INNER JOIN Product_images 
-                                            ON Lots.product_id = Product_images.product_id
+                                        INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
                                         INNER JOIN Users 
                                             ON Auction_history.winner_id = Users.user_id
                                         WHERE Lots.end_time < '{dt_now}'""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table1 = table1.fetchall()
 
             table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status  FROM Lots
-                                        INNER JOIN Products 
-                                            ON Lots.product_id = Products.product_id
-                                        INNER JOIN Product_images 
-                                            ON Lots.product_id = Product_images.product_id
+                                        INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
                                         LEFT JOIN Auction_history 
                                             ON Lots.lot_id = Auction_history.lot_id
                                         WHERE Lots.end_time < '{dt_now}'AND Auction_history.lot_id IS NULL""")
@@ -393,71 +385,50 @@ class Database:
                 
     def edit_User_db(self, p, d):
         with self.con:
-                if len(p) == 6:
+                print(p)
+                print(d)
+                if p[1] == 1:
                     r = self.con.execute(f"""SELECT user_id FROM Users
                                                 WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""") 
                     r = r.fetchall()
                     
                     self.con.execute(f"""UPDATE Users
-                                            SET username = '{p[0]}', balance = {p[2]}, successful_bids = {p[3]}, auto_bid_access = {p[4]}, is_banned = {p[5]}
+                                            SET username = '{p[0]}', successful_bids = {p[2]}, auto_bid_access = {p[3]}, is_banned = {p[4]}
                                             WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
-                elif len(p) == 7:
+                else:
                     self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
-                              values('{p[0]}', '{p[6]}', {p[2]}, {p[1]}, {5}, {0})""")
-                    
-                    self.con.execute(f"""DELETE FROM Users  
-                                     WHERE username = '{d[0]}' and balance = '{d[2]}' and successful_bids = {d[3]}""")                 
+                              values('{p[0]}', '{p[5]}', {d[2]}, {p[1]}, {5}, {0})""")                 
 
 
     def edit_Admin_db(self, p, d):
         with self.con:
-                print(p[2])
-                if p[2] != 1:
-                    r = self.con.execute(f"""SELECT admin_id FROM Admins
+                r = self.con.execute(f"""SELECT admin_id FROM Admins
                                                 WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""") 
-                    r = r.fetchall()
+                r = r.fetchall()
                     
-                    self.con.execute(f"""UPDATE Admins
-                                            SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, balance = {p[3]},  commission_rate = {p[4]}, penalties = {p[5]}
+                self.con.execute(f"""UPDATE Admins
+                                            SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, commission_rate = {p[3]}, penalties = {p[4]}
                                             WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
-                else:
-                    print(p)
-                    print(d)
-                    self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
-                                            values('{p[0]}', 1, {p[3]}, {0}, {0}, {0})""")
-                    
-                    self.con.execute(f"""DELETE FROM Admins  
-                                     WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[3]}""")
                     
     def edit_MW1_db(self, p):
-        with self.con:
-                print(p)
-                self.con.execute(f"""UPDATE Products
-                                        SET description = '{p[1]}', price == {p[3]}
-                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
-                
+        with self.con:                
                 self.con.execute(f"""UPDATE Lots
-                                        SET starting_price = {p[3]}, start_time == '{p[4]}', end_time = '{p[5]}'
+                                        SET description = '{p[1]}', starting_price = {p[3]}, start_time == '{p[4]}', end_time = '{p[5]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки  
                 
-                self.con.execute(f"""UPDATE Product_images
+                self.con.execute(f"""UPDATE Lot_images
                                         SET image_pt = '{p[2]}'
-                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
+                                        WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
                 
     def edit_MW2_db(self, p):
         with self.con:
-                print(p)
-                self.con.execute(f"""UPDATE Products
-                                        SET description = '{p[1]}', price == {p[3]}
-                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
-                
                 self.con.execute(f"""UPDATE Lots
-                                        SET starting_price = {p[3]}
+                                        SET description = '{p[1]}', starting_price = {p[3]}
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
                 
-                self.con.execute(f"""UPDATE Product_images
+                self.con.execute(f"""UPDATE Lot_images
                                         SET image_pt = '{p[2]}'
-                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
+                                        WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
 
 db = Database()
 
@@ -554,7 +525,7 @@ data_db = {
     ]
 }
 
-db.clear_data()
-db.delete_table()
-db.create_table()
-db.fill_table(data_db)
+#db.clear_data()
+#db.delete_table()
+#db.create_table()
+#db.fill_table(data_db)

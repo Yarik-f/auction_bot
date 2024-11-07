@@ -259,7 +259,7 @@ class Ui_MainWindow(object):
     def editMWT1(self, k):
         try:     
             row = self.tableWidget.currentRow()
-            date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H')
+            date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
             dt_now = datetime.datetime.today()
             if date_time_obj > dt_now:
                 p = []
