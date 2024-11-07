@@ -52,33 +52,25 @@ class Database:
                 )
                 ''')
             self.con.execute('''
-                CREATE TABLE IF NOT EXISTS Products (
-                product_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title VARCHAR(100) NOT NULL,
-                description TEXT,
-                price DECIMAL NOT NULL,
-                location VARCHAR(50) NOT NULL
-                )
-                ''')
-            self.con.execute('''
-                CREATE TABLE IF NOT EXISTS Product_images (
+                CREATE TABLE IF NOT EXISTS Lot_images (
                 image_tg VARCHAR(40),
                 image_pt VARCHAR(255) NOT NULL,
-                product_id INTEGER,
-                FOREIGN KEY (product_id) REFERENCES Products(product_id)
+                lot_id INTEGER,
+                FOREIGN KEY (lot_id) REFERENCES Lots(lot_id)
                 )
                 ''')
             self.con.execute('''
                 CREATE TABLE IF NOT EXISTS Lots(
                 lot_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                product_id INTEGER,
+                title VARCHAR(100) NOT NULL,
+                description TEXT,
+                location VARCHAR(50) NOT NULL,
                 starting_price DECIMAL NOT NULL,
                 seller_id INTEGER,
                 start_time DATETIME,
                 end_time DATETIME,
                 document_type VARCHAR(50) CHECK(document_type IN ('Ювелирный', 'Историч ценный', 'Стандартный')),
                 status VARCHAR(20) CHECK(status IN ('В процессе', 'Продан', 'Не продан')) DEFAULT 'В процессе',
-                FOREIGN KEY (product_id) REFERENCES Products(product_id),
                 FOREIGN KEY (seller_id) REFERENCES Admins(admin_id)
                 )
                 ''')
@@ -144,9 +136,8 @@ class Database:
         sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
         sql_insert_admins = "INSERT INTO Admins (username, password, balance, role_id, commission_rate, penalties) values(?, ?, ?, ?, ?, ?)"
-        sql_insert_products = "INSERT INTO Products (title, description, price, location) values(?, ?, ?, ?)"
-        sql_insert_product_images = "INSERT INTO Product_images (image_tg, image_pt, product_id) values(?, ?, ?)"
-        sql_insert_lots = "INSERT INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
+        sql_insert_lot_images = "INSERT INTO Lot_images (image_tg, image_pt, lot_id) values(?, ?, ?)"
+        sql_insert_lots = "INSERT INTO Lots (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
         sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount) values(?, ?, ?)"
         sql_insert_auction_history = "INSERT INTO Auction_history (lot_id, winner_id, final_price) values(?, ?, ?)"
         sql_insert_complaints_strikes = "INSERT INTO Complaints_strikes (complainant_id, target_admin_id, reason, status, strike_count) values(?, ?, ?, ?, ?)"
@@ -156,8 +147,7 @@ class Database:
         self.get_data(sql_insert_roles, 'roles', data)
         self.get_data(sql_insert_users, 'users', data)
         self.get_data(sql_insert_admins, 'admins', data)
-        self.get_data(sql_insert_products, 'products', data)
-        self.get_data(sql_insert_product_images, 'product_images', data)
+        self.get_data(sql_insert_lot_images, 'lot_images', data)
         self.get_data(sql_insert_lots, 'lots', data)
         self.get_data(sql_insert_bids, 'bids', data)
         self.get_data(sql_insert_auction_history, 'auction_history', data)
@@ -170,8 +160,7 @@ class Database:
             self.con.execute("DELETE FROM Roles")
             self.con.execute("DELETE FROM Users")
             self.con.execute("DELETE FROM Admins")
-            self.con.execute("DELETE FROM Products")
-            self.con.execute("DELETE FROM Product_images")
+            self.con.execute("DELETE FROM Lot_images")
             self.con.execute("DELETE FROM Lots")
             self.con.execute("DELETE FROM Bids")
             self.con.execute("DELETE FROM Auction_history")
@@ -184,8 +173,7 @@ class Database:
             self.con.execute("DROP TABLE IF EXISTS Roles")
             self.con.execute("DROP TABLE IF EXISTS Users")
             self.con.execute("DROP TABLE IF EXISTS Admins")
-            self.con.execute("DROP TABLE IF EXISTS Products")
-            self.con.execute("DROP TABLE IF EXISTS Product_images")
+            self.con.execute("DROP TABLE IF EXISTS Lot_images")
             self.con.execute("DROP TABLE IF EXISTS Lots")
             self.con.execute("DROP TABLE IF EXISTS Bids")
             self.con.execute("DROP TABLE IF EXISTS Auction_history")
@@ -493,15 +481,15 @@ data_db = {
         ("admin", "root", 850, 3, 2.0, 0),
     ],
     "products": [
-        ("Картина", "Красивая картина маслом.", 1500.00, 'Moscow'),
-        ("Часы", "Стильные наручные часы.", 750.50, 'Minsk'),
-        ("Серебряная ложка", "Ложка из чистого серебра.", 250.00, 'Vitebsk'),
-        ("Статуэтка", "Статуэтка ручной работы.", 300.00, 'Grodno'),
-        ("Книга", "Редкое издание книги.", 500.00, 'Praga'),
-        ("Монета", "Антикварная монета.", 1200.00, 'Berlin'),
-        ("Ваза", "Стеклянная ваза ручной работы.", 400.00, 'Moscow'),
+        ("Картина", "Красивая картина маслом.", 'Moscow'),
+        ("Часы", "Стильные наручные часы.", 'Minsk'),
+        ("Серебряная ложка", "Ложка из чистого серебра.", 'Vitebsk'),
+        ("Статуэтка", "Статуэтка ручной работы.", 'Grodno'),
+        ("Книга", "Редкое издание книги.", 'Praga'),
+        ("Монета", "Антикварная монета.", 'Berlin'),
+        ("Ваза", "Стеклянная ваза ручной работы.", 'Moscow'),
     ],
-    "product_images": [
+    "lot_images": [
         ('tg1', "http://example.com/images/painting.jpg", 1),
         ('tg2', "http://example.com/images/watches.jpg", 2),
         ('tg3', "http://example.com/images/spoon.jpg", 3),
@@ -511,13 +499,13 @@ data_db = {
         ('tg7', "http://example.com/images/vase.jpg", 7),
     ],
     "lots": [
-        (1, 1500.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Стандартный", "Продан"),
-        (2, 750.50, 2, "2024-10-24 10:00", "2024-10-30 10:00", "Ювелирный", "Продан"),
-        (3, 250.00, 2, "2024-10-24 10:00", "2024-11-02 10:00", "Стандартный", "Продан"),
-        (4, 300.00, 2, "2024-10-24 10:00", "2024-11-05 10:00", "Историч ценный", "Продан"),
-        (5, 500.00, 1, "2024-10-24 10:00", "2024-11-01 10:00", "Стандартный", "Продан"),
-        (6, 1200.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Историч ценный", "Продан"),
-        (7, 400.00, 2, "2024-10-24 10:00", "2024-11-03 10:00", "Стандартный", "Продан"),
+        ("Картина", "Красивая картина маслом.", 'Moscow', 1500.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Стандартный", "Продан"),
+        ("Часы", "Стильные наручные часы.", 'Minsk', 750.50, 2, "2024-10-24 10:00", "2024-10-30 10:00", "Ювелирный", "Продан"),
+        ("Серебряная ложка", "Ложка из чистого серебра.", 'Vitebsk', 250.00, 2, "2024-10-24 10:00", "2024-11-02 10:00", "Стандартный", "Продан"),
+        ("Статуэтка", "Статуэтка ручной работы.", 'Grodno', 300.00, 1, "2024-10-24 10:00", "2024-11-05 10:00", "Историч ценный", "Продан"),
+        ("Книга", "Редкое издание книги.", 'Praga', 500.00, 1, "2024-10-24 10:00", "2024-11-01 10:00", "Стандартный", "Продан"),
+        ("Монета", "Антикварная монета.", 'Berlin', 1200.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Историч ценный", "Продан"),
+        ("Ваза", "Стеклянная ваза ручной работы.", 'Moscow', 400.00, 2, "2024-10-24 10:00", "2024-11-03 10:00", "Стандартный", "Продан"),
     ],
     "bids": [
         (1, 1, 1550.00),
@@ -566,7 +554,7 @@ data_db = {
     ]
 }
 
-# db.clear_data()
-# db.delete_table()
-# db.create_table()
-# db.fill_table(data_db)
+db.clear_data()
+db.delete_table()
+db.create_table()
+db.fill_table(data_db)
