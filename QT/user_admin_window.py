@@ -10,7 +10,7 @@ import create_lot_UA
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(1117, 723)
+        Dialog.resize(1120, 725)
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
         self.tabWidget.setGeometry(QtCore.QRect(0, 0, 1111, 721))
         font = QtGui.QFont()
@@ -96,6 +96,7 @@ class Ui_Dialog(object):
         result = Dialog.exec_()
         if result == QtWidgets.QDialog.Rejected:
             self.fill_user_table()
+            self.fill_admin_table()
 
     def edit_admin(self, k):
         row = Ui_Dialog.click_of_table_A(self)
@@ -108,6 +109,7 @@ class Ui_Dialog(object):
         result = Dialog.exec_()
         if result == QtWidgets.QDialog.Rejected:
             self.fill_admin_table()
+            self.fill_user_table()
 
     def add(self, k):
         Dialog = QtWidgets.QDialog()

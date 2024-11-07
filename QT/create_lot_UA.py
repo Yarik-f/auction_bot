@@ -92,7 +92,7 @@ class Ui_Dialog(object):
             self.pushButton_3.clicked.connect(self.minus)
 
         elif self.k == 'edit':
-            self.tableWidget.setColumnCount(6)
+            self.tableWidget.setColumnCount(7)
             self.tableWidget.setRowCount(1)
             item = QtWidgets.QTableWidgetItem()
             self.tableWidget.setHorizontalHeaderItem(0, item)
@@ -106,12 +106,14 @@ class Ui_Dialog(object):
             self.tableWidget.setHorizontalHeaderItem(4, item)
             item = QtWidgets.QTableWidgetItem()
             self.tableWidget.setHorizontalHeaderItem(5, item)
+            item = QtWidgets.QTableWidgetItem()
+            self.tableWidget.setHorizontalHeaderItem(6, item)
             self.combo_box = QtWidgets.QComboBox(Dialog)
             self.combo_box.addItems(['0', '1'])
             self.combo_box_2 = QtWidgets.QComboBox(Dialog)
             self.combo_box_2.addItems(['0', '1'])
             self.combo_box_3 = QtWidgets.QComboBox(Dialog)
-            self.combo_box_3.addItems(['user'])
+            self.combo_box_3.addItems(['user', 'admin', 'root'])
             self.tableWidget.setCellWidget(0, 4, self.combo_box)
             self.tableWidget.setCellWidget(0, 5, self.combo_box_2)
             self.tableWidget.setCellWidget(0, 1, self.combo_box_3)
@@ -132,10 +134,10 @@ class Ui_Dialog(object):
             item = QtWidgets.QTableWidgetItem()
             self.tableWidget.setHorizontalHeaderItem(5, item)
             self.combo_box = QtWidgets.QComboBox(Dialog)
-            self.combo_box.addItems(['2', '3'])
+            self.combo_box.addItems(['user', 'admin', 'root'])
             self.tableWidget.setCellWidget(0, 2, self.combo_box)
 
-
+        #self.tableWidget.itemSelectionChanged.connect(self.status)
         self.pushButton.clicked.connect(self.save)
         
 
@@ -190,6 +192,8 @@ class Ui_Dialog(object):
             item.setText(_translate("MainWindow", "Авто ставка"))
             item = self.tableWidget.horizontalHeaderItem(5)
             item.setText(_translate("MainWindow", "Бан"))
+            item = self.tableWidget.horizontalHeaderItem(6)
+            item.setText(_translate("MainWindow", "Пароль"))
             for s in range(len(self.p)):
                 self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s]))
 
@@ -212,7 +216,16 @@ class Ui_Dialog(object):
 
         self.tableWidget.resizeColumnsToContents()
     
-    
+    #def status(self):
+        #print(self.combo_box_3.currentText())
+        #if self.combo_box_3.currentText() == 'user':
+            #it = self.tableWidget.item(0, 6)
+            #if it is not None:
+                #it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+            #columnPosition = self.tableWidget.columnCount() # Узнаем количества строк в таблице 
+            #self.tableWidget.insertColumn(columnPosition)
+
+
     def plus(self):
         if self.k == 'add':
             rowPosition = self.tableWidget.rowCount() # Узнаем количества строк в таблице 
@@ -228,10 +241,11 @@ class Ui_Dialog(object):
         elif self.k == 'addAdmin':
             rowPosition = self.tableWidget.rowCount() # Узнаем количества строк в таблице 
             self.tableWidget.insertRow(rowPosition)
-            n = f"self.combo_box_{self.tableWidget.rowCount()}" 
-            n = QtWidgets.QComboBox(self.Dialog)
-            n.addItems(['2', '3'])
-            self.tableWidget.setCellWidget(self.tableWidget.rowCount()-1, 3, n)
+            f"self.combo_box_{self.tableWidget.rowCount()} = {QtWidgets.QComboBox(self.Dialog).addItems(['2', '3'])}"
+            print(['self.combo_box_%s' % rowPosition])
+            globals()['self.combo_box_%s' % rowPosition] = QtWidgets.QComboBox(self.Dialog)
+            globals()['self.combo_box_%s' % rowPosition].addItems(['2', '3'])
+            self.tableWidget.setCellWidget(self.tableWidget.rowCount()-1, 3, globals()['self.combo_box_%s' % rowPosition] )
             
 
     def minus(self):
@@ -258,28 +272,39 @@ class Ui_Dialog(object):
                 pe = [] # Добовляес в список информацию о ячейках в новой строчки 
                 for s1 in range(self.tableWidget.columnCount()): # 
                     if s1 == 3:
-                        pe.append(self.combo_box.currentText())
-                        #if s == 0:
-                            #pe.append(self.combo_box.currentText())
-                        #else:
-                            #n = f"self.combo_box_{s+1}" 
-                            #n = QtWidgets.QComboBox(self.Dialog)
-                            #pe.append(n.currentText())
+                        #pe.append(self.tableWidget.item(s, s1).currentText())
+                        #pe.append(self.combo_box.currentText())
+                        if s == 0:
+                            pe.append(self.combo_box.currentText())
+                        else:
+                            try:
+                                print(['self.combo_box_%s' % s])
+                                pe.append(globals()['self.combo_box_%s' % s].currentText())
+                            except RuntimeError:
+                                None
                     else:
                         pe.append(self.tableWidget.item(s, s1).text()) # Добовляем информацию данной ячейкм в список 
                 db.add_user_A_db(pe) 
+                
 
         elif self.k == 'edit':
             pe = [] # Добавляем в список информацию о редакции ячейки  
             for s1 in range(self.tableWidget.columnCount()): # 
                 if s1 == 1:
-                    pe.append(self.combo_box_3.currentText())
+                    if self.combo_box_3.currentText() == 'user':
+                        pe.append(1)
+                    elif self.combo_box_3.currentText() == 'admin':
+                        pe.append(2)
+                    else:
+                        pe.append(3)
                 elif s1 == 4:
                     pe.append(self.combo_box.currentText())
                 elif s1 == 5:
                     pe.append(self.combo_box_2.currentText())
+                elif s1 == 6:
+                    if self.combo_box_3.currentText() != 'user': 
+                        pe.append(self.tableWidget.item(0, 6).text())
                 else:
-
                     pe.append(self.tableWidget.item(0, s1).text()) # Добовляем информацию данной ячейкм в список 
             db.edit_User_db(pe, self.p)
 
@@ -287,7 +312,12 @@ class Ui_Dialog(object):
             pe = [] # Добавляем в список информацию о редакции ячейки  
             for s1 in range(self.tableWidget.columnCount()): # 
                 if s1 == 2:
-                    pe.append(self.combo_box.currentText())
+                    if self.combo_box.currentText() == 'user':
+                        pe.append(1)
+                    elif self.combo_box.currentText() == 'admin':
+                        pe.append(2)
+                    else:
+                        pe.append(3)
                 else:
                     pe.append(self.tableWidget.item(0, s1).text()) # Добовляем информацию данной ячейкм в список 
             db.edit_Admin_db(pe, self.p)

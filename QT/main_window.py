@@ -1,7 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import functools
+from PyQt5.QtWidgets import QMessageBox
+import functools, datetime
 
-import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window
+import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window, editMW
 from DataBase.database import db
 
 
@@ -120,6 +121,12 @@ class Ui_MainWindow(object):
         font.setPointSize(12)
         self.pushButton_8.setFont(font)
         self.pushButton_8.setObjectName("pushButton_8")
+        self.pushButton_9 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_9.setGeometry(QtCore.QRect(800, 480, 220, 40))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_9.setFont(font)
+        self.pushButton_9.setObjectName("pushButton_8")
         self.tableWidget_2 = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget_2.setGeometry(QtCore.QRect(90, 580, 1131, 221))
         self.tableWidget_2.setObjectName("tableWidget_2")
@@ -139,6 +146,14 @@ class Ui_MainWindow(object):
         self.tableWidget_2.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(6, item)
+        self.pushButton_10 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_10.setGeometry(QtCore.QRect(800, 850, 220, 51))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_10.setFont(font)
+        self.pushButton_10.setToolTip("")
+        self.pushButton_10.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.pushButton_10.setObjectName("pushButton_11")
         self.pushButton_11 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_11.setGeometry(QtCore.QRect(500, 850, 220, 51))
         font = QtGui.QFont()
@@ -157,6 +172,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
+        self.tableWidget_2.itemSelectionChanged.connect(self.EditingBlock_2)
         
 
         self.r = []
@@ -167,6 +183,8 @@ class Ui_MainWindow(object):
         self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 
                                                             'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )',
                                                             self.r, 8))
+        self.pushButton_9.clicked.connect(functools.partial(self.editMWT1, 'editMWT1'))
+        self.pushButton_10.clicked.connect(functools.partial(self.editMWT2, 'editMWT2'))
         self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?', self.r, 11 ))
         self.retranslateUi(MainWindow)
         
@@ -208,6 +226,7 @@ class Ui_MainWindow(object):
         self.label_5.setText(_translate("MainWindow",
                                         "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые купили или у которых вышло время аукциона</span></p></body></html>"))
         self.pushButton_8.setText(_translate("MainWindow", "Удалить выделенный товар"))
+        self.pushButton_9.setText(_translate("MainWindow", "Редактировать"))
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Номер лота"))
         item = self.tableWidget_2.horizontalHeaderItem(1)
@@ -222,7 +241,7 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Статус"))
         item = self.tableWidget_2.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Покупатель"))
-        
+        self.pushButton_10.setText(_translate("MainWindow", "Редактировать"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
                                                             "тавар на торги вновь"))
 
@@ -236,6 +255,44 @@ class Ui_MainWindow(object):
         elif n == 2:
             row = self.tableWidget_2.currentRow() # Номер строки
             self.r.append(self.tableWidget_2.item(row, 0).text())
+
+    def editMWT1(self, k):
+        try:     
+            row = self.tableWidget.currentRow()
+            date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H')
+            dt_now = datetime.datetime.today()
+            if date_time_obj > dt_now:
+                p = []
+                for s in range(self.tableWidget.columnCount()):
+                    if s != 4:
+                        p.append(self.tableWidget.item(row, s).text()) 
+                Dialog = QtWidgets.QDialog()
+                ui = editMW.Ui_Dialog(k, p)
+                ui.setupUi(Dialog)
+                result = Dialog.exec_()
+                if result == QtWidgets.QDialog.Rejected:
+                    self.auction()
+            else:
+                QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать разрешено только лоты, в которых не началось время торгов")
+        except AttributeError: 
+            QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
+
+    def editMWT2(self, k):
+        try:
+            row = self.tableWidget_2.currentRow()
+            p = []
+            for s in range(self.tableWidget_2.columnCount()):
+                if s != 4 and s != 6 and s != 5:
+                    p.append(self.tableWidget_2.item(row, s).text()) 
+            Dialog = QtWidgets.QDialog()
+            ui = editMW.Ui_Dialog(k, p)
+            ui.setupUi(Dialog)
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Rejected:
+                self.auction()
+        except AttributeError: 
+            QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
+
         
 
     # Заполнение таблиц на главной страницы 
@@ -286,11 +343,19 @@ class Ui_MainWindow(object):
 
     # Блокируем изменения ячейки
     def EditingBlock(self):
-        it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
-        it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+        row = self.tableWidget.currentRow()
+        date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
+        dt_now = datetime.datetime.today()
+        if date_time_obj > dt_now:
+            None
+        else:
+            it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
+            it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+
     def EditingBlock_2(self):
         it = self.tableWidget_2.item(self.tableWidget_2.currentRow(), self.tableWidget_2.currentColumn())
         it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+
     def ИТ(self):
         Dialog = QtWidgets.QDialog()
         ui = ИсторияТоргов.Ui_Dialog()

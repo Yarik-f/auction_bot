@@ -331,6 +331,7 @@ class Database:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
+                
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
@@ -380,42 +381,95 @@ class Database:
             table1NULL = table1NULL.fetchall()
 
             return [table, tableNULL, table1, table1NULL]
+        
 # Функция добавления значений в сам файл SQL               
     def add_user_db(self, data):
         with self.con:
             self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
                               values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""") # Происходит дабовления строки в SQL Таблицу
+            
     def add_user_A_db(self, data):
         with self.con:
             self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
                               values('{data[0]}', '{data[1]}', {data[2]}, {data[3]}, {data[4]}, {data[5]})""") # Происходит дабовления строки в SQL Таблицу
+            
     def delete_User_db(self, d):
         with self.con:
                 self.con.execute(f"""DELETE FROM Users  
                                      WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
+                
     def delete_Admin_db(self, d):
         with self.con:
                 self.con.execute(f"""DELETE FROM Admins  
                                      WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
+                
     def edit_User_db(self, p, d):
         with self.con:
-                r = self.con.execute(f"""SELECT user_id FROM Users
-                                            WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""") 
-                r = r.fetchall()
-                
-                self.con.execute(f"""UPDATE Users
-                                        SET username = '{p[0]}', balance = {p[2]}, successful_bids = {p[3]}, auto_bid_access = {p[4]}, is_banned = {p[5]}
-                                        WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
+                if len(p) == 6:
+                    r = self.con.execute(f"""SELECT user_id FROM Users
+                                                WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""") 
+                    r = r.fetchall()
+                    
+                    self.con.execute(f"""UPDATE Users
+                                            SET username = '{p[0]}', balance = {p[2]}, successful_bids = {p[3]}, auto_bid_access = {p[4]}, is_banned = {p[5]}
+                                            WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
+                elif len(p) == 7:
+                    self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
+                              values('{p[0]}', '{p[6]}', {p[2]}, {p[1]}, {5}, {0})""")
+                    
+                    self.con.execute(f"""DELETE FROM Users  
+                                     WHERE username = '{d[0]}' and balance = '{d[2]}' and successful_bids = {d[3]}""")                 
+
+
     def edit_Admin_db(self, p, d):
         with self.con:
-                r = self.con.execute(f"""SELECT admin_id FROM Admins
-                                            WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""") 
-                r = r.fetchall()
+                print(p[2])
+                if p[2] != 1:
+                    r = self.con.execute(f"""SELECT admin_id FROM Admins
+                                                WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""") 
+                    r = r.fetchall()
+                    
+                    self.con.execute(f"""UPDATE Admins
+                                            SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, balance = {p[3]},  commission_rate = {p[4]}, penalties = {p[5]}
+                                            WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
+                else:
+                    print(p)
+                    print(d)
+                    self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
+                                            values('{p[0]}', 1, {p[3]}, {0}, {0}, {0})""")
+                    
+                    self.con.execute(f"""DELETE FROM Admins  
+                                     WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[3]}""")
+                    
+    def edit_MW1_db(self, p):
+        with self.con:
+                print(p)
+                self.con.execute(f"""UPDATE Products
+                                        SET description = '{p[1]}', price == {p[3]}
+                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
                 
-                self.con.execute(f"""UPDATE Admins
-                                        SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, balance = {p[3]},  commission_rate = {p[4]}, penalties = {p[5]}
-                                        WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
-
+                self.con.execute(f"""UPDATE Lots
+                                        SET starting_price = {p[3]}, start_time == '{p[4]}', end_time = '{p[5]}'
+                                        WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки  
+                
+                self.con.execute(f"""UPDATE Product_images
+                                        SET image_pt = '{p[2]}'
+                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
+                
+    def edit_MW2_db(self, p):
+        with self.con:
+                print(p)
+                self.con.execute(f"""UPDATE Products
+                                        SET description = '{p[1]}', price == {p[3]}
+                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
+                
+                self.con.execute(f"""UPDATE Lots
+                                        SET starting_price = {p[3]}
+                                        WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
+                
+                self.con.execute(f"""UPDATE Product_images
+                                        SET image_pt = '{p[2]}'
+                                        WHERE product_id = {p[0]}""")  # Редактируем данные ячейки
 
 db = Database()
 
