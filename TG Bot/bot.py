@@ -1,11 +1,14 @@
 import threading
 import time
 from datetime import datetime, timedelta
-import os
+import os, sys
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+sys.path.append(project_root)
+from DataBase.database import db
 
 import telebot
 from telebot import types
-from DataBase.database import db
 
 #бот
 bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
@@ -132,9 +135,9 @@ def back_menu(message):
 # Обработка для кнопки "Баланс"
 @bot.message_handler(func=lambda message: message.text == 'Баланс')
 def show_balance(message):
-    user_id = message.chat.id
-    balance = user_balances.get(user_id, 0)  # Получаем баланс пользователя
-    bot.send_message(message.chat.id, f'Ваш текущий баланс: {balance} у.е.')
+    username = message.from_user.username or str(message.from_user.id) # Определяем имя пользователя 
+    balance = db.balance_db(username) # Получаем баланс пользователя из БД
+    bot.send_message(message.chat.id, f'Ваш текущий баланс: {balance} у.е.') # Отправляем сообщения с балансом пользователя
 
 
 # Обработка для кнопки "Пополнить баланс"
@@ -147,12 +150,12 @@ def request_deposit(message):
 # Функция для пополнения баланса
 def deposit_balance(message):
     try:
-        user_id = message.chat.id
-        amount = float(message.text)  #
+        amount = float(message.text)  # Принимаем сообщения о сумме пополнения
         if amount > 0:
-            user_balances[user_id] = user_balances.get(user_id, 0) + amount
+            username = message.from_user.username or str(message.from_user.id) # Определяем имя пользователя
+            balance = db.addBalance(username, amount) # Получаем баланс пользователя из БД
             bot.send_message(message.chat.id,
-                             f'Баланс успешно пополнен на {amount} у.е.\nВаш новый баланс: {user_balances[user_id]} у.е.')
+                             f'Баланс успешно пополнен на {amount} у.е.\nВаш новый баланс: {balance} у.е.')  # Выводим сообщения насколько увеличен баланс  и сколько теперь на счету
         else:
             bot.send_message(message.chat.id, 'Пожалуйста, введите положительное число для пополнения баланса.')
     except ValueError:

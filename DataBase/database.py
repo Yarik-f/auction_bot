@@ -306,6 +306,24 @@ class Database:
             """
             data = self.con.execute(query).fetchall()
             return data
+            
+    def addBalance(self, u, amount):
+        with sql.connect(db_path) as self.con:
+            n = self.con.execute(f"""SELECT balance FROM Users
+                                            WHERE Users.username == '{u}'   """) # Узнаем баланс пользователя 
+            n = n.fetchall()[0][0]
+            n = n + amount # Суммируем текущий баланс с суммой пополнения
+            self.con.execute(f"""UPDATE Users
+                                    SET balance = {n}
+                                    WHERE Users.username == '{u}'  """) # Вносим изменения баланса в БД
+            return n
+
+    def balance_db(self, u):
+        with sql.connect(db_path) as self.con:
+            n = self.con.execute(f"""SELECT balance FROM Users
+                                            WHERE Users.username == '{u}'  """) # Узнаем баланс пользователя 
+            n = n.fetchall()[0][0]
+            return n
 
 
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
@@ -536,4 +554,3 @@ data_db = {
 # db.delete_table()
 # db.create_table()
 # db.fill_table(data_db)
-
