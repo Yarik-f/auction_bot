@@ -186,11 +186,11 @@ class Ui_MainWindow(object):
         self.pushButton_9.clicked.connect(functools.partial(self.editMWT1, 'editMWT1'))
         self.pushButton_10.clicked.connect(functools.partial(self.editMWT2, 'editMWT2'))
         self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?', self.r, 11 ))
-        self.retranslateUi(MainWindow)
         
         self.tableWidget.itemSelectionChanged.connect(functools.partial(self.click_of_table, 1))
         self.tableWidget_2.itemSelectionChanged.connect(functools.partial(self.click_of_table, 2))
-
+        
+        self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -297,7 +297,7 @@ class Ui_MainWindow(object):
 
     # Заполнение таблиц на главной страницы 
     def auction(self):
-        home_page = db.Auction()
+        home_page = db.Auction() 
         table, tableNULL, table1, table1NULL = home_page[0], home_page[1], home_page[2], home_page[3]
         self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
         # Заполняем сталбцы с окончанием торгов и стартовую цену лота
@@ -360,6 +360,7 @@ class Ui_MainWindow(object):
         Dialog = QtWidgets.QDialog()
         ui = ИсторияТоргов.Ui_Dialog()
         ui.setupUi(Dialog)
+        ui.AddTradingHistory()
         Dialog.exec_()
 
     def UA(self):
