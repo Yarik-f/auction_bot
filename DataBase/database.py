@@ -419,8 +419,6 @@ class Database:
                 
     def edit_User_db(self, p, d):
         with self.con:
-                print(p)
-                print(d)
                 if p[1] == 1:
                     r = self.con.execute(f"""SELECT user_id FROM Users
                                                 WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""") 
