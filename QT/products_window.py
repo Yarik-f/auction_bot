@@ -41,19 +41,12 @@ class Ui_Dialog(object):
         font.setPointSize(10)
         self.pushButton_4.setFont(font)
         self.pushButton_4.setObjectName("pushButton_4")
-        self.pushButton_5 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_5.setGeometry(QtCore.QRect(460, 670, 121, 31))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.pushButton_5.setFont(font)
-        self.pushButton_5.setObjectName("pushButton_5")
 
         self.pushButton.clicked.connect(self.save_and_close)
-        self.pushButton_2.clicked.connect(functools.partial(self.child_window, 'add'))
+        self.pushButton_2.clicked.connect(functools.partial(self.child_window, 'create'))
         self.pushButton_3.clicked.connect(self.delete_product)
         self.pushButton_4.clicked.connect(functools.partial(self.child_window, 'edit'))
-        self.pushButton_5.clicked.connect(functools.partial(self.child_window, 'create'))
-        self.tableWidget.itemClicked.connect(self.get_product)
+        self.tableWidget.itemClicked.connect(self.get_lot)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -62,18 +55,18 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.pushButton.setText(_translate("Dialog", "На главное"))
-        self.pushButton_2.setText(_translate("Dialog", "Добавить"))
+        self.pushButton_2.setText(_translate("Dialog", "Создать лот"))
         self.pushButton_3.setText(_translate("Dialog", "Удалить"))
         self.pushButton_4.setText(_translate("Dialog", "Редактировать"))
-        self.pushButton_5.setText(_translate("Dialog", "Создать лот"))
 
     def fill_product_table(self):
         self.tableWidget.clearContents()
-        products = db.get_product_data()
+        products = db.get_lot_data()
 
         self.tableWidget.setRowCount(len(products))
 
-        table_column = ["Название", "Описание", "Цена", "Местоположение", 'Ссылка на фото']
+        table_column = ["Название", "Описание", "Местоположение",  "Стартовая цена", 'Продавец',
+                        'Начало аукциона', 'Конец аукциона', 'Тип документа', 'Ссылка на фото', 'Статус']
 
         self.tableWidget.setColumnCount(len(table_column))
         self.tableWidget.setHorizontalHeaderLabels(table_column)
@@ -88,44 +81,51 @@ class Ui_Dialog(object):
         self.tableWidget.resizeColumnToContents(3)
         self.tableWidget.resizeColumnToContents(4)
 
-    def get_product(self):
+    def get_lot(self):
         row = self.tableWidget.currentRow()
         if row != -1:
             title = self.tableWidget.item(row, 0).text()
             description = self.tableWidget.item(row, 1).text()
-            price = self.tableWidget.item(row, 2).text()
-            location = self.tableWidget.item(row, 3).text()
-            image_path = self.tableWidget.item(row, 4).text()
-            product_id = db.get_id_product(title, description)
+            location = self.tableWidget.item(row, 2).text()
+            starting_price = self.tableWidget.item(row, 3).text()
+            seller = self.tableWidget.item(row, 4).text()
+            s_time = self.tableWidget.item(row, 5).text()
+            e_time = self.tableWidget.item(row, 6).text()
+            document_type = self.tableWidget.item(row, 7).text()
+            image_path = self.tableWidget.item(row, 8).text()
+            status = self.tableWidget.item(row, 9).text()
+            lot_id = db.get_id_lot(title, description)
 
-            return [product_id, title, description, price, location, image_path]
+            return [lot_id, title, description, location, starting_price, seller, s_time, e_time, document_type, image_path, status]
 
     def child_window(self, check):
         selected_items = self.tableWidget.selectedItems()
-        product = self.get_product()
+        lot = self.get_lot()
         Dialog = QtWidgets.QDialog()
         ui = product_child_window.Ui_Dialog()
         print(selected_items)
-        if product == None:
+        if lot == None:
             ui.setupUi(Dialog, check)
         else:
-            ui.setupUi(Dialog, check, product[0])
+            ui.setupUi(Dialog, check, lot[0])
 
-        if check == 'create' and selected_items:
-            price = product[3]
-            ui.table(price)
-            Dialog.exec_()
-        elif check == 'edit' and selected_items:
-            title = product[1]
-            description = product[2]
-            price = product[3]
-            location = product[4]
-            image_path = product[5]
-            ui.edit_table(title, description, price, location, image_path)
+        if check == 'create':
+            ui.table()
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Accepted:
                 self.fill_product_table()
-        elif check == 'add':
+        elif check == 'edit' and selected_items:
+            title = lot[1]
+            description = lot[2]
+            location = lot[3]
+            starting_price = lot[4]
+            seller = lot[5]
+            s_time = lot[6]
+            e_time = lot[7]
+            document_type = lot[8]
+            image_path = lot[9]
+            status = lot[10]
+            ui.edit_table(title, description, location, starting_price, seller, s_time, e_time, document_type, image_path, status)
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Accepted:
                 self.fill_product_table()
@@ -134,9 +134,9 @@ class Ui_Dialog(object):
 
     def delete_product(self):
         selected_items = self.tableWidget.selectedItems()
-        product = self.get_product()
+        product = self.get_lot()
         if selected_items:
-            db.delete_product_and_images(product[0])
+            db.delete_lot_and_images(product[0])
             self.fill_product_table()
         else:
             QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")

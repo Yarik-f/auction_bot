@@ -194,6 +194,10 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+    def get_admin_id(self, username):
+        query = '''SELECT admin_id FROM Admins WHERE username = ?'''
+        data = self.con.execute(query, (username,)).fetchone()
+        return data[0]
     def get_admin_data(self):
         data = self.con.execute('''
             SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
@@ -202,59 +206,57 @@ class Database:
         ''')
         data = data.fetchall()
         return data
-    def get_product_data(self):
+    def get_lot_data(self):
         data = self.con.execute('''
-            SELECT p.title, p.description, p.price, p.location, i.image_pt
-            FROM Product_images i
-            JOIN Products p ON i.product_id = p.product_id
+            SELECT l.title, l.description, l.location, l.starting_price, a.username,
+                    l.start_time, l.end_time, l.document_type, i.image_pt, l.status
+            FROM Lots l
+            JOIN Admins a ON l.seller_id = a.admin_id
+            Join Lot_images i ON l.lot_id = i.lot_id
         ''')
         data = data.fetchall()
         return data
-    def get_id_product(self, title, description):
+    def get_id_lot(self, title, description):
         title = f'{title}'
         description = f'{description}'
         query = '''
-            SELECT product_id 
-            FROM Products 
+            SELECT lot_id 
+            FROM Lots 
             WHERE title = ? AND description = ?'''
         data = self.con.execute(query, (title, description)).fetchone()
         return data[0]
-    def create_lot(self, product_id, starting_price, seller_id, start_time, end_time, document_type, status):
-        sql_insert_lots = "INSERT OR IGNORE INTO Lots (product_id, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?)"
+    def create_lot(self, title, description, location, starting_price, seller_id, start_time, end_time, document_type, status):
+        sql_insert_lots = "INSERT INTO Lots (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
         self.con.execute(sql_insert_lots,
-                         [product_id, starting_price, seller_id, start_time, end_time, document_type, status])
+                         [title, description, location, starting_price, seller_id, start_time, end_time, document_type, status])
         self.con.commit()
-    def add_product(self, title, description, price, location):
-        sql_insert_products = "INSERT INTO Products (title, description, price, location) values(?, ?, ?, ?)"
-        self.con.execute(sql_insert_products,
-                         [title, description, price, location])
-        self.con.commit()
-    def add_product_image(self, image_pt, product_id):
-        sql_insert_product_images = "INSERT INTO Product_images (image_pt, product_id) values(?, ?)"
+    def add_lot_image(self, image_pt, lot_id):
+        sql_insert_product_images = "INSERT INTO Lot_images (image_pt, lot_id) values(?, ?)"
         self.con.execute(sql_insert_product_images,
-                         [image_pt, product_id])
+                         [image_pt, lot_id])
         self.con.commit()
-    def update_product(self, product_id, title, description, price, location):
-        query = """UPDATE Products 
-                   SET title = ?, description = ?, price = ?, location = ? 
-                   WHERE product_id = ?"""
-        self.con.execute(query, (title, description, price, location, product_id))
+    def update_lot(self, lot_id, title, description, location, starting_price, seller_id, start_time, end_time, document_type, status):
+        query = """UPDATE Lots 
+                   SET title = ?, description = ?, location = ?, starting_price = ?, seller_id = ?, start_time = ?, end_time = ?, 
+                   document_type = ?, status = ? 
+                   WHERE lot_id = ?"""
+        self.con.execute(query, (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status, lot_id))
         self.con.commit()
-    def update_product_image(self, image_path, product_id):
-        query = """UPDATE Product_images 
+    def update_lot_image(self, image_path, lot_id):
+        query = """UPDATE Lot_images 
                    SET image_pt = ? 
-                   WHERE product_id = ?"""
-        self.con.execute(query, (image_path, product_id))
+                   WHERE lot_id = ?"""
+        self.con.execute(query, (image_path, lot_id))
         self.con.commit()
-    def delete_product_and_images(self, product_id):
+    def delete_lot_and_images(self, lot_id):
 
         self.con.execute("BEGIN TRANSACTION")
 
-        delete_images_query = """DELETE FROM Product_images WHERE product_id = ?"""
-        self.con.execute(delete_images_query, (product_id,))
+        delete_images_query = """DELETE FROM Lot_images WHERE lot_id = ?"""
+        self.con.execute(delete_images_query, (lot_id,))
 
-        delete_product_query = """DELETE FROM Products WHERE product_id = ?"""
-        self.con.execute(delete_product_query, (product_id,))
+        delete_product_query = """DELETE FROM Lots WHERE lot_id = ?"""
+        self.con.execute(delete_product_query, (lot_id,))
 
         self.con.commit()
         self.con.rollback()
@@ -290,15 +292,16 @@ class Database:
             elif data_admin and data_user is None:
                 role = self.check_role('Admins', data_admin[0])
                 return role
+            elif data_admin and data_user:
+                return 0
             else:
                 print('Ошибка')
-    def get_lot_data(self):
+    def get_lot_data_auction(self):
         with sql.connect(db_path) as self.con:
             query = f"""
-                SELECT l.lot_id, l.starting_price, l.start_time, p.title, p.description, p.location, i.image_pt
+                SELECT l.lot_id, l.starting_price, l.start_time, l.title, l.description, l.location, i.image_pt
                 FROM Lots l
-                JOIN Products p ON l.product_id = p.product_id
-                JOIN Product_images i ON p.product_id = i.product_id
+                JOIN Lot_images i ON l.lot_id = i.lot_id
                 WHERE l.status = 'В процессе'
             """
             data = self.con.execute(query).fetchall()
@@ -451,15 +454,6 @@ data_db = {
         ("admin1", "12345678", 0, 2, 5.0, 2),
         ("admin", "root", 850, 3, 2.0, 0),
     ],
-    "products": [
-        ("Картина", "Красивая картина маслом.", 'Moscow'),
-        ("Часы", "Стильные наручные часы.", 'Minsk'),
-        ("Серебряная ложка", "Ложка из чистого серебра.", 'Vitebsk'),
-        ("Статуэтка", "Статуэтка ручной работы.", 'Grodno'),
-        ("Книга", "Редкое издание книги.", 'Praga'),
-        ("Монета", "Антикварная монета.", 'Berlin'),
-        ("Ваза", "Стеклянная ваза ручной работы.", 'Moscow'),
-    ],
     "lot_images": [
         ('tg1', "http://example.com/images/painting.jpg", 1),
         ('tg2', "http://example.com/images/watches.jpg", 2),
@@ -525,7 +519,7 @@ data_db = {
     ]
 }
 
-#db.clear_data()
-#db.delete_table()
-#db.create_table()
-#db.fill_table(data_db)
+# db.clear_data()
+# db.delete_table()
+# db.create_table()
+# db.fill_table(data_db)

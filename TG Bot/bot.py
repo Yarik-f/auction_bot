@@ -38,7 +38,7 @@ def send_auction_lot():
     processed_lots = set()
 
     while True:
-        lots = db.get_lot_data()
+        lots = db.get_lot_data_auction()
         for lot in lots:
             lot_id, starting_price, start_time, title, description, location, image_path = lot
             if lot_id in processed_lots:
@@ -85,11 +85,36 @@ def start_command(message):
                    types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
         name = message.from_user.first_name
         bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
-
+    elif check == 0:
+        button = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        button.add(types.KeyboardButton('Войти как пользователь'), types.KeyboardButton('Войти как админ'))
+        name = message.from_user.first_name
+        bot.send_message(message.chat.id, f'Привет, {name}!\nКак вы хотите продолжить:', reply_markup=button)
     else:
         bot.send_message(message.chat.id, f'Привет, нет данных {check}')
 
+@bot.message_handler(func=lambda message: message.text == 'Войти как пользователь')
+def user(message):
+    button = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button.add(types.KeyboardButton('Баланс'), types.KeyboardButton('Пополнить баланс'),
+               types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'), types.KeyboardButton('На главное'))
 
+    bot.send_message(message.chat.id, f'Чтобы принять участие в аукционах\nПереходи по ссылке в канал https://t.me/+qaZa5fdmZyU2NGNi:',
+                     reply_markup=button)
+@bot.message_handler(func=lambda message: message.text == 'Войти как админ')
+def admin(message):
+    button = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button.add(types.KeyboardButton('БУГАГАГАГА'), types.KeyboardButton('Пополнить баланс'),
+               types.KeyboardButton('ХЗХЗХЗ'), types.KeyboardButton('На главное'))
+
+    bot.send_message(message.chat.id, f'Ну тут еще не придумал:',
+                     reply_markup=button)
+@bot.message_handler(func=lambda message: message.text == 'На главное')
+def back_menu(message):
+    button = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button.add(types.KeyboardButton('Войти как пользователь'), types.KeyboardButton('Войти как админ'))
+    bot.send_message(message.chat.id, f'Ну тут еще не придумал:',
+                     reply_markup=button)
 
 # Обработка для кнопки "Баланс"
 @bot.message_handler(func=lambda message: message.text == 'Баланс')

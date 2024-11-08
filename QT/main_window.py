@@ -199,7 +199,7 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow",
                                       "<html><head/><body><p><span style=\" font-size:14pt;\">Данные администратора</span></p></body></html>"))       
         self.pushButton_3.setText(_translate("MainWindow", "Просмотр истории торгов"))
-        self.pushButton_4.setText(_translate("MainWindow", "Товары"))
+        self.pushButton_4.setText(_translate("MainWindow", "Лоты"))
         self.pushButton_5.setText(_translate("MainWindow", "Пользователи/Админы"))
         self.label_2.setText(_translate("MainWindow",
                                         "<html><head/><body><p><span style=\" font-size:14pt;\">Баланс</span></p></body></html>"))
