@@ -14,8 +14,12 @@ channel_id = '@aucton_bot'
 #Хранение баланса пользователей
 user_balances = {}
 
-
-
+keyboard = types.InlineKeyboardMarkup()
+button1 = types.InlineKeyboardButton("Время", callback_data="time")
+button2 = types.InlineKeyboardButton("Инфо", callback_data="info")
+button3 = types.InlineKeyboardButton("Открыть лот", callback_data="info")
+keyboard.add(button1, button2)
+keyboard.add(button3)
 
 
 def send_lot_at_time(lot_data):
@@ -26,13 +30,21 @@ def send_lot_at_time(lot_data):
         time.sleep(delay)
 
     if image_path.startswith('http://') or image_path.startswith('https://'):
-        bot.send_photo(chat_id=channel_id, photo=image_path, caption=message_text)
+
+        bot.send_photo(chat_id=channel_id, photo=image_path, caption=message_text, reply_markup=keyboard)
+
     elif os.path.isfile(image_path):
         with open(image_path, 'rb') as photo:
-            bot.send_photo(chat_id=channel_id, photo=photo, caption=message_text)
+            bot.send_photo(chat_id=channel_id, photo=photo, caption=message_text, reply_markup=keyboard)
     else:
         print("Ошибка: Неверный путь к изображению")
 
+# @bot.callback_query_handler(func=lambda call: True)
+# def callback_handler(call):
+#     if call.data == "time":
+#         bot.answer_callback_query(call.id, "Эта кнопка должна показывать отсчет времени")
+#     elif call.data == "info":
+#         bot.answer_callback_query(call.id, "Эта кнопка должна показывать информацию что делать если выграл")
 
 def send_auction_lot():
     processed_lots = set()
@@ -47,6 +59,7 @@ def send_auction_lot():
             target_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
             time_send = datetime.now() - target_time
             if 0 <= time_send.total_seconds() <= 300:
+
                 message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСтартовая цена: {starting_price}\nТекущая ставка: Пока что хз'
                 lot_data = (message, image_path, datetime.now())
                 threading.Thread(target=send_lot_at_time, args=(lot_data,)).start()
