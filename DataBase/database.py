@@ -15,7 +15,7 @@ def item_is_not_editable(table):
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
 
 
-class Database:
+class Database: 
     def __init__(self):
         self.con = sql.connect(db_path)
     def create_table(self):
@@ -361,6 +361,19 @@ class Database:
             table1NULL = table1NULL.fetchall()
 
             return [table, tableNULL, table1, table1NULL]
+        
+
+    def AddTradingHistory_db(self):
+        with self.con:
+            table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
+                                            INNER JOIN Lots 
+                                                ON Bids.lot_id = Lots.lot_id
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id 
+                                            INNER JOIN Users 
+                                                ON Bids.user_id = Users.user_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table = table.fetchall()
+            return [table]
         
 # Функция добавления значений в сам файл SQL               
     def add_user_db(self, data):
