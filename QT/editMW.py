@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem
 
+from choose_image import Choose_Image
 from DataBase.database import db
 
 class Ui_Dialog(object):
@@ -46,7 +47,8 @@ class Ui_Dialog(object):
             self.tableWidget.setHorizontalHeaderItem(2, item)
 
         self.pushButton.clicked.connect(self.save)
-        
+        self.tableWidget.cellDoubleClicked.connect(self.choose_image)
+
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -83,7 +85,6 @@ class Ui_Dialog(object):
 
         self.tableWidget.resizeColumnsToContents()
         
-
     def save(self):                
         if self.k == 'editMWT1':
             pe = [self.p[0]] # Добавляем в список информацию о редакции ячейки  
@@ -98,6 +99,16 @@ class Ui_Dialog(object):
             db.edit_MW2_db(pe)
            
         self.Dialog.close()
+
+    def choose_image(self, row, column):
+        if row == 0 and column == 1:
+            choose_image = QtWidgets.QDialog()
+            ui = Choose_Image()
+            ui.setupUi(choose_image)
+            if choose_image.exec_() == QtWidgets.QDialog.Accepted:
+                link = ui.get_link()
+                if link:
+                    self.tableWidget.setItem(row, column, QTableWidgetItem(link))
         
     
 if __name__ == "__main__":
