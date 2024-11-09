@@ -12,7 +12,6 @@ class Ui_Dialog(object):
         self.t = t[0]
         self.u = u
 
-
     def setupUi(self, Dialog):
         self.Dialog = Dialog
         Dialog.setObjectName("Dialog")

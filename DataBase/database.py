@@ -325,7 +325,6 @@ class Database:
             n = n.fetchall()[0][0]
             return n
 
-
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
@@ -383,7 +382,7 @@ class Database:
 
             return [table, tableNULL, table1, table1NULL]
         
-
+    # Функция для заполнения таблицы история торгов 
     def AddTradingHistory_db(self):
         with self.con:
             table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
@@ -393,6 +392,20 @@ class Database:
                                                 ON Lots.lot_id = Lot_images.lot_id 
                                             INNER JOIN Users 
                                                 ON Bids.user_id = Users.user_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table = table.fetchall()
+            return [table]
+    
+    # Функция для заполнения таблицы история торгов после нажатой кнопки поиск      
+    def search_db(self, textSearch):
+        with self.con:
+            table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
+                                            INNER JOIN Lots 
+                                                ON Bids.lot_id = Lots.lot_id
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id 
+                                            INNER JOIN Users 
+                                                ON Bids.user_id = Users.user_id
+                                            WHERE description = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table = table.fetchall()
             return [table]
         
@@ -431,7 +444,6 @@ class Database:
                     self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
                               values('{p[0]}', '{p[5]}', {d[2]}, {p[1]}, {5}, {0})""")                 
 
-
     def edit_Admin_db(self, p, d):
         with self.con:
                 r = self.con.execute(f"""SELECT admin_id FROM Admins
@@ -461,6 +473,51 @@ class Database:
                 self.con.execute(f"""UPDATE Lot_images
                                         SET image_pt = '{p[2]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
+                
+    def myProducts_db(self, name):
+        dt_now = (datetime.datetime.now())  # Определяем текущее время
+        with self.con:
+            r = self.con.execute(f"""SELECT admin_id FROM Admins
+                                                WHERE username = '{name}'   """) 
+            r = r.fetchall()
+
+            table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                            INNER JOIN Bids 
+                                                ON Lots.lot_id = Bids.lot_id
+                                            WHERE Lots.end_time > '{dt_now}' AND seller_id == {r[0][0]}
+                                            GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table = table.fetchall()
+
+            tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time FROM Lots
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                            LEFT JOIN Bids 
+                                                ON Bids.lot_id = Lots.lot_id
+                                            WHERE Lots.end_time > '{dt_now}' AND seller_id == {r[0][0]} AND Bids.lot_id IS NULL
+                                            """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            tableNULL = tableNULL.fetchall()
+
+            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Lots
+                                        INNER JOIN Auction_history 
+                                            ON Lots.lot_id = Auction_history.lot_id
+                                        INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                        INNER JOIN Users 
+                                            ON Auction_history.winner_id = Users.user_id
+                                        WHERE Lots.end_time < '{dt_now}' AND seller_id == {r[0][0]}  """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table1 = table1.fetchall()
+
+            table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status  FROM Lots
+                                        INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                        LEFT JOIN Auction_history 
+                                            ON Lots.lot_id = Auction_history.lot_id
+                                        WHERE Lots.end_time < '{dt_now}' AND seller_id == {r[0][0]} AND Auction_history.lot_id IS NULL""")
+            table1NULL = table1NULL.fetchall()
+
+            return [table, tableNULL, table1, table1NULL]
 
 db = Database()
 

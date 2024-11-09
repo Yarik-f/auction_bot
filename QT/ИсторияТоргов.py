@@ -5,9 +5,11 @@ sys.path.append(project_root)
 from DataBase.database import db
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
+        self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(850, 900)
         self.label = QtWidgets.QLabel(Dialog)
@@ -34,18 +36,26 @@ class Ui_Dialog(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(6, item)
         self.pushButton = QtWidgets.QPushButton(Dialog)
-        self.pushButton.setGeometry(QtCore.QRect(70, 810, 221, 51))
+        self.pushButton.setGeometry(QtCore.QRect(570, 820, 100, 30))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.pushButton.setFont(font)
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_2.setGeometry(QtCore.QRect(470, 810, 201, 51))
+        self.pushButton_2.setGeometry(QtCore.QRect(690, 820, 130, 30))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.pushButton_2.setFont(font)
         self.pushButton_2.setObjectName("pushButton_2")
+        self.lineEdit = QtWidgets.QLineEdit(Dialog)
+        self.lineEdit.setGeometry(QtCore.QRect(70, 820, 400, 30))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.lineEdit.setFont(font)
+        self.lineEdit.setObjectName("textEdit")
 
+        self.pushButton.clicked.connect(self.search)
+        self.pushButton_2.clicked.connect(self.Cancel)
         self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
 
         self.retranslateUi(Dialog)
@@ -69,25 +79,27 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Стартовая цена"))
         item = self.tableWidget.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "Цена продажи"))
-        self.pushButton.setText(_translate("Dialog", "Удалить выделенный товар\n"
-" из списка"))
-        self.pushButton_2.setText(_translate("Dialog", "Очистить весь список"))
+        self.pushButton.setText(_translate("Dialog", "Поиск"))
+        self.pushButton_2.setText(_translate("Dialog", "Отмена поиска"))
+        self.lineEdit.setPlaceholderText('Введите информацию для поиска')
 
         self.tableWidget.resizeColumnsToContents()
 
+    def Cancel(self):
+        self.AddTradingHistory()
+
     def AddTradingHistory(self):
-        home_page = db.AddTradingHistory_db()[0]
-        self.tableWidget.setRowCount(len(home_page))  # Создаем строки в таблице
+        historyPage = db.AddTradingHistory_db()[0]
+        self.tableWidget.setRowCount(len(historyPage))  # Создаем строки в таблице
         # Заполняем сталбцы с окончанием торгов и стартовую цену лота
-        for k in range(len(home_page)):
-            print(home_page)
-            self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(home_page[k][0])))
-            self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(home_page[k][1])))
-            self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(home_page[k][2])))
-            self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(home_page[k][3])))
-            self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(home_page[k][4])))
-            self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(home_page[k][5])))
-            self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(home_page[k][6])))
+        for k in range(len(historyPage)):
+            self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(historyPage[k][0])))
+            self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(historyPage[k][1])))
+            self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(historyPage[k][2])))
+            self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(historyPage[k][3])))
+            self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(historyPage[k][4])))
+            self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(historyPage[k][5])))
+            self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(historyPage[k][6])))
         #self.tableWidget.sortItems(1, order=QtCore.Qt.AscendingOrder)
         self.tableWidget.setSortingEnabled(True)
 
@@ -95,6 +107,25 @@ class Ui_Dialog(object):
         it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
         it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
 
+    def search(self): 
+        textSearch = self.lineEdit.displayText()
+        historyPage = db.search_db(textSearch)[0]
+        if len(historyPage) > 0:
+            self.tableWidget.setRowCount(len(historyPage))  # Создаем строки в таблице
+            # Заполняем сталбцы с окончанием торгов и стартовую цену лота
+            for k in range(len(historyPage)):
+                self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(historyPage[k][0])))
+                self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(historyPage[k][1])))
+                self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(historyPage[k][2])))
+                self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(historyPage[k][3])))
+                self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(historyPage[k][4])))
+                self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(historyPage[k][5])))
+                self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(historyPage[k][6])))
+            #self.tableWidget.sortItems(1, order=QtCore.Qt.AscendingOrder)
+            self.tableWidget.setSortingEnabled(True)
+        else:
+            QMessageBox.warning(self.Dialog,"Ошибка", "По данному запросу ничего не найдено")
+            
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

@@ -8,6 +8,7 @@ from DataBase.database import db
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, root=True):
+        self.name = 'admin'
         self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1350, 930)
@@ -19,20 +20,26 @@ class Ui_MainWindow(object):
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(26, 22, 371, 41))
         self.label.setObjectName("label")
+        self.radioButton = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton.setGeometry(QtCore.QRect(600, 150, 150, 40))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.radioButton.setFont(font)
+        self.radioButton.setObjectName("radioButton")
         self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_3.setGeometry(QtCore.QRect(100, 130, 210, 40))
+        self.pushButton_3.setGeometry(QtCore.QRect(100, 100, 210, 40))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.pushButton_3.setFont(font)
         self.pushButton_3.setObjectName("pushButton_3")
         self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_4.setGeometry(QtCore.QRect(450, 130, 265, 40))
+        self.pushButton_4.setGeometry(QtCore.QRect(450, 100, 265, 40))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.pushButton_4.setFont(font)
         self.pushButton_4.setObjectName("pushButton_4")
         self.pushButton_5 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_5.setGeometry(QtCore.QRect(900, 130, 180, 40))
+        self.pushButton_5.setGeometry(QtCore.QRect(900, 100, 180, 40))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.pushButton_5.setFont(font)
@@ -75,7 +82,7 @@ class Ui_MainWindow(object):
         self.label_4.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.label_4.setObjectName("label_4")
         self.tableWidget = QtWidgets.QTableWidget(self.tab)
-        self.tableWidget.setGeometry(QtCore.QRect(20, 50, 1200, 580))
+        self.tableWidget.setGeometry(QtCore.QRect(20, 50, 1305, 580))
         font = QtGui.QFont()
         font.setWeight(50)
         font.setKerning(True)
@@ -140,7 +147,7 @@ class Ui_MainWindow(object):
         self.label_5.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.label_5.setObjectName("label_5")
         self.tableWidget_2 = QtWidgets.QTableWidget(self.tab_2)
-        self.tableWidget_2.setGeometry(QtCore.QRect(20, 50, 1200, 580))
+        self.tableWidget_2.setGeometry(QtCore.QRect(20, 50, 1305, 580))
         self.tableWidget_2.setObjectName("tableWidget_2")
         self.tableWidget_2.setColumnCount(7)
         self.tableWidget_2.setRowCount(0)
@@ -202,6 +209,8 @@ class Ui_MainWindow(object):
         
         self.tableWidget.itemSelectionChanged.connect(functools.partial(self.click_of_table, 1))
         self.tableWidget_2.itemSelectionChanged.connect(functools.partial(self.click_of_table, 2))
+
+        self.radioButton.clicked.connect(self.myProducts)
         
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -240,6 +249,7 @@ class Ui_MainWindow(object):
                                         "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые купили или у которых вышло время аукциона</span></p></body></html>"))
         self.pushButton_8.setText(_translate("MainWindow", "Удалить выделенный товар"))
         self.pushButton_9.setText(_translate("MainWindow", "Редактировать"))
+        self.radioButton.setText(_translate("MainWindow", "Мои товары"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Торги "))
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Номер лота"))
@@ -258,8 +268,57 @@ class Ui_MainWindow(object):
         self.pushButton_10.setText(_translate("MainWindow", "Редактировать"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
                                                             "тавар на торги вновь"))
-        
+        self.tableWidget.resizeColumnsToContents()
+        self.tableWidget_2.resizeColumnsToContents()
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
+
+
+    def myProducts(self):
+        if self.radioButton.isChecked() == True:
+            home_page = db.myProducts_db(self.name)
+            table, tableNULL, table1, table1NULL = home_page[0], home_page[1], home_page[2], home_page[3]
+            self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
+            # Заполняем сталбцы с окончанием торгов и стартовую цену лота
+            for k in range(len(table)):
+                self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table[k][0])))
+                self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table[k][1])))
+                self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table[k][2])))
+                self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table[k][3])))
+                self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
+                self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table[k][5])))
+                self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table[k][6])))
+
+            for k in range(len(tableNULL)):
+                self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
+                self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))
+                self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
+                self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
+                self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem('-'))
+                self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
+                self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+                
+            self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
+            for k in range(len(table1)):
+                self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
+                self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
+                self.tableWidget_2.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table1[k][2])))
+                self.tableWidget_2.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table1[k][3])))
+                self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
+                self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
+                self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table1[k][6])))
+            for k in range(len(table1NULL)):
+                self.tableWidget_2.setItem(k + len(table1), 0, QtWidgets.QTableWidgetItem(str(table1NULL[k][0])))
+                self.tableWidget_2.setItem(k + len(table1), 1, QtWidgets.QTableWidgetItem(str(table1NULL[k][1])))
+                self.tableWidget_2.setItem(k + len(table1), 2, QtWidgets.QTableWidgetItem(str(table1NULL[k][2])))
+                self.tableWidget_2.setItem(k + len(table1), 3, QtWidgets.QTableWidgetItem(str(table1NULL[k][3])))
+                self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
+                self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
+                self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
+
+            self.tableWidget.resizeColumnsToContents()
+            self.tableWidget_2.resizeColumnsToContents()
+        else:
+            self.auction()
 
 
     #Отслеживаем нажатые ячейки 
@@ -288,7 +347,10 @@ class Ui_MainWindow(object):
                 ui.setupUi(Dialog)
                 result = Dialog.exec_()
                 if result == QtWidgets.QDialog.Rejected:
-                    self.auction()
+                    if self.radioButton.isChecked() == True:
+                        self.myProducts()
+                    else:
+                        self.auction()
             else:
                 QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать разрешено только лоты, в которых не началось время торгов")
         except AttributeError: 
@@ -307,7 +369,10 @@ class Ui_MainWindow(object):
             ui.setupUi(Dialog)
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Rejected:
-                self.auction()
+                if self.radioButton.isChecked() == True:
+                    self.myProducts()
+                else:
+                    self.auction()
         except AttributeError: 
             QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
   
@@ -335,7 +400,6 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
             self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
             
-
         self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
         for k in range(len(table1)):
             self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
@@ -353,9 +417,6 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
             self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
             self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
-
-        self.tableWidget.resizeColumnsToContents()
-        self.tableWidget_2.resizeColumnsToContents()
 
     # Блокируем изменения ячейки
     def EditingBlock(self):
@@ -395,7 +456,10 @@ class Ui_MainWindow(object):
         ui.fill_product_table()
         result = Dialog.exec_()
         if result == QtWidgets.QDialog.Accepted:
-            self.auction()
+            if self.radioButton.isChecked() == True:
+                self.myProducts()
+            else:
+                self.auction()
 
     def Confirmation(self, n, t, u):
         Dialog = QtWidgets.QDialog()
@@ -403,8 +467,10 @@ class Ui_MainWindow(object):
         ui.setupUi(Dialog)
         result = Dialog.exec_()
         if result == QtWidgets.QDialog.Accepted:
-            self.auction()
-
+            if self.radioButton.isChecked() == True:
+                self.myProducts()
+            else:
+                self.auction()
 
 if __name__ == "__main__":
     import sys

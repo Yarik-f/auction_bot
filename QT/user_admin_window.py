@@ -9,6 +9,7 @@ import create_lot_UA
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
+        self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(1120, 725)
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
@@ -62,6 +63,9 @@ class Ui_Dialog(object):
         self.pushButton_2.clicked.connect(self.delete_User)
         self.pushButton_3.clicked.connect(functools.partial(self.edit_user, 'edit'))
 
+        self.pushButton_4.clicked.connect(self.close)
+        self.pushButton_6.clicked.connect(self.close)
+
         self.pushButton_7.clicked.connect(functools.partial(self.addAdmin, 'addAdmin'))
         self.pushButton_8.clicked.connect(self.delete_Admin)
         self.pushButton_5.clicked.connect(functools.partial(self.edit_admin, 'editAdmin'))
@@ -77,13 +81,16 @@ class Ui_Dialog(object):
         self.pushButton.setText(_translate("Dialog", "Добавить"))
         self.pushButton_2.setText(_translate("Dialog", "Удалить"))
         self.pushButton_3.setText(_translate("Dialog", "Редактировать"))
-        self.pushButton_4.setText(_translate("Dialog", "Сохранить"))
+        self.pushButton_4.setText(_translate("Dialog", "На главную"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Dialog", "Пользователи"))
         self.pushButton_5.setText(_translate("Dialog", "Редактировать"))
-        self.pushButton_6.setText(_translate("Dialog", "Сохранить"))
+        self.pushButton_6.setText(_translate("Dialog", "На главную"))
         self.pushButton_7.setText(_translate("Dialog", "Добавить"))
         self.pushButton_8.setText(_translate("Dialog", "Удалить"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Администраторы"))
+
+    def close(self):
+        self.Dialog.accept()
 
     def edit_user(self, k):
         row = Ui_Dialog.click_of_table(self)
