@@ -1,7 +1,7 @@
 import sqlite3 as sql
 import os
 from PyQt5 import QtCore
-import datetime
+import datetime, time
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'my_database.db')
@@ -327,14 +327,14 @@ class Database:
 
     def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
-            dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+            dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
             with self.con:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
 
         elif u == 11:
-            dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')
+            dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M')
             with self.con:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
@@ -344,40 +344,102 @@ class Database:
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
         with self.con:
-            table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
+            table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time, username FROM Lots
                                             INNER JOIN Lot_images
                                                 ON Lots.lot_id = Lot_images.lot_id
                                             INNER JOIN Bids 
                                                 ON Lots.lot_id = Bids.lot_id
+                                            INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
                                             WHERE Lots.end_time > '{dt_now}'
                                             GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table = table.fetchall()
 
-            tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time FROM Lots
+            tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time, username FROM Lots
                                             INNER JOIN Lot_images
                                                 ON Lots.lot_id = Lot_images.lot_id
+                                            INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
                                             LEFT JOIN Bids 
                                                 ON Bids.lot_id = Lots.lot_id
                                             WHERE Lots.end_time > '{dt_now}' AND Bids.lot_id IS NULL
                                             """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             tableNULL = tableNULL.fetchall()
             
-            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Lots
+            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, Users.username, Admins.username FROM Lots
                                         INNER JOIN Auction_history 
                                             ON Lots.lot_id = Auction_history.lot_id
                                         INNER JOIN Lot_images
                                                 ON Lots.lot_id = Lot_images.lot_id
                                         INNER JOIN Users 
                                             ON Auction_history.winner_id = Users.user_id
+                                        INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
                                         WHERE Lots.end_time < '{dt_now}'""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table1 = table1.fetchall()
 
-            table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status  FROM Lots
+            table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status, username  FROM Lots
                                         INNER JOIN Lot_images
                                                 ON Lots.lot_id = Lot_images.lot_id
+                                        INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
                                         LEFT JOIN Auction_history 
                                             ON Lots.lot_id = Auction_history.lot_id
                                         WHERE Lots.end_time < '{dt_now}'AND Auction_history.lot_id IS NULL""")
+            table1NULL = table1NULL.fetchall()
+
+            return [table, tableNULL, table1, table1NULL]
+        
+    # Заполнения таблицы моих товаров на аукционе     
+    def myProducts_db(self, name):
+        dt_now = (datetime.datetime.now())  # Определяем текущее время
+        with self.con:
+            r = self.con.execute(f"""SELECT admin_id FROM Admins
+                                                WHERE username = '{name}'   """) 
+            r = r.fetchall()
+
+            table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time, username FROM Lots
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                            INNER JOIN Bids 
+                                                ON Lots.lot_id = Bids.lot_id
+                                            INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
+                                            WHERE Lots.end_time > '{dt_now}' AND seller_id == {r[0][0]}
+                                            GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table = table.fetchall()
+
+            tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time, username FROM Lots
+                                            INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                            INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
+                                            LEFT JOIN Bids 
+                                                ON Bids.lot_id = Lots.lot_id
+                                            WHERE Lots.end_time > '{dt_now}' AND seller_id == {r[0][0]} AND Bids.lot_id IS NULL
+                                            """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            tableNULL = tableNULL.fetchall()
+
+            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, Users.username, Admins.username  FROM Lots
+                                        INNER JOIN Auction_history 
+                                            ON Lots.lot_id = Auction_history.lot_id
+                                        INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                        INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
+                                        INNER JOIN Users 
+                                            ON Auction_history.winner_id = Users.user_id
+                                        WHERE Lots.end_time < '{dt_now}' AND seller_id == {r[0][0]}  """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+            table1 = table1.fetchall()
+
+            table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status, username  FROM Lots
+                                        INNER JOIN Lot_images
+                                                ON Lots.lot_id = Lot_images.lot_id
+                                        INNER JOIN Admins 
+                                                ON Lots.seller_id = Admins.admin_id
+                                        LEFT JOIN Auction_history 
+                                            ON Lots.lot_id = Auction_history.lot_id
+                                        WHERE Lots.end_time < '{dt_now}' AND seller_id == {r[0][0]} AND Auction_history.lot_id IS NULL""")
             table1NULL = table1NULL.fetchall()
 
             return [table, tableNULL, table1, table1NULL]
@@ -455,7 +517,7 @@ class Database:
                                             WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
                     
     def edit_MW1_db(self, p):
-        with self.con:                
+        with self.con:             
                 self.con.execute(f"""UPDATE Lots
                                         SET description = '{p[1]}', starting_price = {p[3]}, start_time == '{p[4]}', end_time = '{p[5]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки  
@@ -474,51 +536,20 @@ class Database:
                                         SET image_pt = '{p[2]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
                 
-    def myProducts_db(self, name):
-        dt_now = (datetime.datetime.now())  # Определяем текущее время
+    def findProduct_db(self, id):
+        r = self.con.execute(f"""SELECT title, description, location, starting_price, seller_id, start_time, end_time FROM Lots
+                                                WHERE lot_id = {id} """) 
+        r = r.fetchall()
+        return [r[0]]
+    
+    def addItemToAuction(self, pe):
         with self.con:
-            r = self.con.execute(f"""SELECT admin_id FROM Admins
-                                                WHERE username = '{name}'   """) 
-            r = r.fetchall()
-
-            table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time FROM Lots
-                                            INNER JOIN Lot_images
-                                                ON Lots.lot_id = Lot_images.lot_id
-                                            INNER JOIN Bids 
-                                                ON Lots.lot_id = Bids.lot_id
-                                            WHERE Lots.end_time > '{dt_now}' AND seller_id == {r[0][0]}
-                                            GROUP BY Bids.lot_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-            table = table.fetchall()
-
-            tableNULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, start_time, end_time FROM Lots
-                                            INNER JOIN Lot_images
-                                                ON Lots.lot_id = Lot_images.lot_id
-                                            LEFT JOIN Bids 
-                                                ON Bids.lot_id = Lots.lot_id
-                                            WHERE Lots.end_time > '{dt_now}' AND seller_id == {r[0][0]} AND Bids.lot_id IS NULL
-                                            """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-            tableNULL = tableNULL.fetchall()
-
-            table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, username  FROM Lots
-                                        INNER JOIN Auction_history 
-                                            ON Lots.lot_id = Auction_history.lot_id
-                                        INNER JOIN Lot_images
-                                                ON Lots.lot_id = Lot_images.lot_id
-                                        INNER JOIN Users 
-                                            ON Auction_history.winner_id = Users.user_id
-                                        WHERE Lots.end_time < '{dt_now}' AND seller_id == {r[0][0]}  """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-            table1 = table1.fetchall()
-
-            table1NULL = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, status  FROM Lots
-                                        INNER JOIN Lot_images
-                                                ON Lots.lot_id = Lot_images.lot_id
-                                        LEFT JOIN Auction_history 
-                                            ON Lots.lot_id = Auction_history.lot_id
-                                        WHERE Lots.end_time < '{dt_now}' AND seller_id == {r[0][0]} AND Auction_history.lot_id IS NULL""")
-            table1NULL = table1NULL.fetchall()
-
-            return [table, tableNULL, table1, table1NULL]
-
+            self.con.execute(f"""INSERT INTO Lots (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status)
+                              values('{pe[1]}', '{pe[2]}', '{pe[3]}', {pe[4]}, {pe[0]}, '{pe[5]}', '{pe[6]}', '{pe[7]}', 'В процессе') """) # Происходит дабовления строки в SQL Таблицу
+            
+            self.con.execute(f"""INSERT INTO Lot_images SELECT NULL, '{pe[8]}', MAX(lot_id) + 1 FROM Lot_images
+                               """) # Происходит дабовления строки в SQL Табл
+            
 db = Database()
 
 data_db = {

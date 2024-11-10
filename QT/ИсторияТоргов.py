@@ -101,7 +101,7 @@ class Ui_Dialog(object):
             self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(historyPage[k][5])))
             self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(historyPage[k][6])))
         #self.tableWidget.sortItems(1, order=QtCore.Qt.AscendingOrder)
-        self.tableWidget.setSortingEnabled(True)
+        self.tableWidget.setSortingEnabled(True) # Разрешаем сортировку таблицв
 
     def EditingBlock(self):
         it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())

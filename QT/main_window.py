@@ -5,10 +5,9 @@ import functools, datetime
 import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window, editMW
 from DataBase.database import db
 
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, root=True):
-        self.name = 'admin'
+        self.name = 'admin1'
         self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1350, 930)
@@ -105,7 +104,7 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
         self.tableWidget.setGridStyle(QtCore.Qt.SolidLine)
         self.tableWidget.setObjectName("tableWidget")
-        self.tableWidget.setColumnCount(7)
+        self.tableWidget.setColumnCount(8)
         self.tableWidget.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(0, item)
@@ -121,6 +120,8 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(6, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget.setHorizontalHeaderItem(7, item)
         self.pushButton_8 = QtWidgets.QPushButton(self.tab)
         self.pushButton_8.setGeometry(QtCore.QRect(450, 650, 220, 40))
         font = QtGui.QFont()
@@ -149,7 +150,7 @@ class Ui_MainWindow(object):
         self.tableWidget_2 = QtWidgets.QTableWidget(self.tab_2)
         self.tableWidget_2.setGeometry(QtCore.QRect(20, 50, 1305, 580))
         self.tableWidget_2.setObjectName("tableWidget_2")
-        self.tableWidget_2.setColumnCount(7)
+        self.tableWidget_2.setColumnCount(8)
         self.tableWidget_2.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(0, item)
@@ -165,6 +166,8 @@ class Ui_MainWindow(object):
         self.tableWidget_2.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(6, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_2.setHorizontalHeaderItem(7, item)
         self.pushButton_10 = QtWidgets.QPushButton(self.tab_2)
         self.pushButton_10.setGeometry(QtCore.QRect(1000, 640, 220, 50))
         font = QtGui.QFont()
@@ -194,7 +197,6 @@ class Ui_MainWindow(object):
         self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
         self.tableWidget_2.itemSelectionChanged.connect(self.EditingBlock_2)
         
-
         self.r = []
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
         self.pushButton_4.clicked.connect(functools.partial(self.products_window))
@@ -245,6 +247,8 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Время начала аукциона"))
         item = self.tableWidget.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Время окончания аукциона"))
+        item = self.tableWidget.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Продавец"))
         self.label_5.setText(_translate("MainWindow",
                                         "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые купили или у которых вышло время аукциона</span></p></body></html>"))
         self.pushButton_8.setText(_translate("MainWindow", "Удалить выделенный товар"))
@@ -265,6 +269,8 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Статус"))
         item = self.tableWidget_2.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Покупатель"))
+        item = self.tableWidget_2.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Продавец"))
         self.pushButton_10.setText(_translate("MainWindow", "Редактировать"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
                                                             "тавар на торги вновь"))
@@ -272,10 +278,10 @@ class Ui_MainWindow(object):
         self.tableWidget_2.resizeColumnsToContents()
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
 
-
+    # Погружаем только те товары которые выставлял текущей администратор
     def myProducts(self):
-        if self.radioButton.isChecked() == True:
-            home_page = db.myProducts_db(self.name)
+        if self.radioButton.isChecked() == True: # Определяем включена кнопка или нет 
+            home_page = db.myProducts_db(self.name) #  Погружаем с БД только те товары который выставил данный администратор  
             table, tableNULL, table1, table1NULL = home_page[0], home_page[1], home_page[2], home_page[3]
             self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
             # Заполняем сталбцы с окончанием торгов и стартовую цену лота
@@ -287,6 +293,7 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
                 self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table[k][5])))
                 self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table[k][6])))
+                self.tableWidget.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table[k][7])))
 
             for k in range(len(tableNULL)):
                 self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
@@ -296,6 +303,9 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem('-'))
                 self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
                 self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+                self.tableWidget.setItem((k + len(table)), 7, QtWidgets.QTableWidgetItem(str(tableNULL[k][6])))
+
+            self.tableWidget.setSortingEnabled(True) # Разрешаем сортировку табли
                 
             self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
             for k in range(len(table1)):
@@ -306,6 +316,8 @@ class Ui_MainWindow(object):
                 self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
                 self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
                 self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table1[k][6])))
+                self.tableWidget_2.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table1[k][7])))
+
             for k in range(len(table1NULL)):
                 self.tableWidget_2.setItem(k + len(table1), 0, QtWidgets.QTableWidgetItem(str(table1NULL[k][0])))
                 self.tableWidget_2.setItem(k + len(table1), 1, QtWidgets.QTableWidgetItem(str(table1NULL[k][1])))
@@ -314,7 +326,9 @@ class Ui_MainWindow(object):
                 self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
                 self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
                 self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
-
+                self.tableWidget_2.setItem(k + len(table1), 7, QtWidgets.QTableWidgetItem(str(table1NULL[k][5])))
+            
+            self.tableWidget_2.setSortingEnabled(True) # Разрешаем сортировку табли
             self.tableWidget.resizeColumnsToContents()
             self.tableWidget_2.resizeColumnsToContents()
         else:
@@ -323,57 +337,84 @@ class Ui_MainWindow(object):
 
     #Отслеживаем нажатые ячейки 
     def click_of_table(self, n):
-        self.r.clear()
         if n == 1:
-            row = self.tableWidget.currentRow() # Номер строки
-            self.r.append(self.tableWidget.item(row, 0).text())
+            if self.tableWidget.currentRow() != -1:
+                self.r.clear()
+                row = self.tableWidget.currentRow() # Номер строки
+                self.r.append(self.tableWidget.item(row, 0).text())
         elif n == 2:
-            row = self.tableWidget_2.currentRow() # Номер строки
-            self.r.append(self.tableWidget_2.item(row, 0).text())
+            if self.tableWidget_2.currentRow() != -1:
+                self.r.clear()
+                row = self.tableWidget_2.currentRow() # Номер строки
+                self.r.append(self.tableWidget_2.item(row, 0).text())
 
     # Редактировании верхней таблицы 
     def editMWT1(self, k):
-        try:     
-            row = self.tableWidget.currentRow()
+        if self.tableWidget.currentRow() != -1:    
+            row = self.tableWidget.currentRow()# Номер строки
+            te = (self.tableWidget.item(row, 7).text())
             date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
             dt_now = datetime.datetime.today()
             if date_time_obj > dt_now:
-                p = []
-                for s in range(self.tableWidget.columnCount()):
-                    if s != 4:
-                        p.append(self.tableWidget.item(row, s).text()) 
-                Dialog = QtWidgets.QDialog()
-                ui = editMW.Ui_Dialog(k, p)
-                ui.setupUi(Dialog)
-                result = Dialog.exec_()
-                if result == QtWidgets.QDialog.Rejected:
-                    if self.radioButton.isChecked() == True:
-                        self.myProducts()
-                    else:
-                        self.auction()
+                if te == self.name:
+                    p = []
+                    for s in range(self.tableWidget.columnCount()):
+                        if s != 4:
+                            p.append(self.tableWidget.item(row, s).text()) 
+                    Dialog = QtWidgets.QDialog()
+                    ui = editMW.Ui_Dialog(k, p)
+                    ui.setupUi(Dialog)
+                    result = Dialog.exec_()
+                    if result == QtWidgets.QDialog.Rejected:
+                        if self.radioButton.isChecked() == True:
+                            self.myProducts()
+                        else:
+                            self.auction()
+                else:
+                    QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать товар можно только тот который выставили вы!!!")
             else:
                 QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать разрешено только лоты, в которых не началось время торгов")
-        except AttributeError: 
+        else: 
             QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
 
     # Редактировании нижней  таблицы
     def editMWT2(self, k):
-        try:
-            row = self.tableWidget_2.currentRow()
-            p = []
-            for s in range(self.tableWidget_2.columnCount()):
-                if s != 4 and s != 6 and s != 5:
-                    p.append(self.tableWidget_2.item(row, s).text()) 
-            Dialog = QtWidgets.QDialog()
-            ui = editMW.Ui_Dialog(k, p)
-            ui.setupUi(Dialog)
-            result = Dialog.exec_()
-            if result == QtWidgets.QDialog.Rejected:
-                if self.radioButton.isChecked() == True:
-                    self.myProducts()
+        if self.tableWidget_2.currentRow() != -1:
+            row = self.tableWidget_2.currentRow()# Номер строки
+            te = self.tableWidget_2.item(row, 7).text() # Узнаем кто выложил товар на аукцион
+            na = self.tableWidget_2.item(row, 4).text() # Узнаем были ли предложения на товар или нет 
+            if te == self.name:
+                if na == '-':
+                    p = []
+                    for s in range(self.tableWidget_2.columnCount()):
+                        if s != 4 and s != 6 and s != 5:
+                            p.append(self.tableWidget_2.item(row, s).text()) 
+                    Dialog = QtWidgets.QDialog()
+                    ui = editMW.Ui_Dialog(k, p)
+                    ui.setupUi(Dialog)
+                    result = Dialog.exec_()
+                    if result == QtWidgets.QDialog.Rejected:
+                        if self.radioButton.isChecked() == True:
+                            self.myProducts()
+                        else:
+                            self.auction()
                 else:
-                    self.auction()
-        except AttributeError: 
+                    id = self.tableWidget_2.item(row, 0).text()
+                    p = db.findProduct_db(id)
+                    img = [self.tableWidget_2.item(row, 2).text()]
+                    p = p + [img]
+                    Dialog = QtWidgets.QDialog()
+                    ui = editMW.Ui_Dialog('editMWT22', p)
+                    ui.setupUi(Dialog)
+                    result = Dialog.exec_()
+                    if result == QtWidgets.QDialog.Rejected:
+                        if self.radioButton.isChecked() == True:
+                            self.myProducts()
+                        else:
+                            self.auction()
+            else:
+                    QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать товар можно только тот который выставили вы!!!")
+        else: 
             QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
   
     # Заполнение таблиц на главной страницы 
@@ -390,6 +431,7 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
             self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table[k][5])))
             self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table[k][6])))
+            self.tableWidget.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table[k][7])))
 
         for k in range(len(tableNULL)):
             self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
@@ -399,6 +441,9 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem('-'))
             self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
             self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+            self.tableWidget.setItem((k + len(table)), 7, QtWidgets.QTableWidgetItem(str(tableNULL[k][6])))
+
+        self.tableWidget.setSortingEnabled(True) # Разрешаем сортировку табли
             
         self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
         for k in range(len(table1)):
@@ -409,6 +454,8 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
             self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
             self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table1[k][6])))
+            self.tableWidget_2.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table1[k][7])))
+
         for k in range(len(table1NULL)):
             self.tableWidget_2.setItem(k + len(table1), 0, QtWidgets.QTableWidgetItem(str(table1NULL[k][0])))
             self.tableWidget_2.setItem(k + len(table1), 1, QtWidgets.QTableWidgetItem(str(table1NULL[k][1])))
@@ -417,18 +464,22 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
             self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
             self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
+            self.tableWidget_2.setItem(k + len(table1), 7, QtWidgets.QTableWidgetItem(str(table1NULL[k][5])))
+
+        self.tableWidget_2.setSortingEnabled(True) # Разрешаем сортировку табли
 
     # Блокируем изменения ячейки
     def EditingBlock(self):
         row = self.tableWidget.currentRow()
-        date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
-        dt_now = datetime.datetime.today()
-        if date_time_obj > dt_now:
-            it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
-            it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
-        else:
-            it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
-            it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+        if self.tableWidget.currentRow() != -1:
+            date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
+            dt_now = datetime.datetime.today()
+            if date_time_obj > dt_now:
+                it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
+                it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+            else:
+                it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
+                it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
 
     def EditingBlock_2(self):
         it = self.tableWidget_2.item(self.tableWidget_2.currentRow(), self.tableWidget_2.currentColumn())
@@ -462,15 +513,38 @@ class Ui_MainWindow(object):
                 self.auction()
 
     def Confirmation(self, n, t, u):
-        Dialog = QtWidgets.QDialog()
-        ui = УдалениеТовара.Ui_Dialog(n, t, u)
-        ui.setupUi(Dialog)
-        result = Dialog.exec_()
-        if result == QtWidgets.QDialog.Accepted:
-            if self.radioButton.isChecked() == True:
-                self.myProducts()
-            else:
-                self.auction()
+        if u == 8:
+            row = self.tableWidget.currentRow() # Номер строки
+            if self.tableWidget.currentRow() != -1:
+                te = (self.tableWidget.item(row, 7).text()) # Определяем текст строки 
+                if te == self.name:
+                    Dialog = QtWidgets.QDialog()
+                    ui = УдалениеТовара.Ui_Dialog(n, t, u)
+                    ui.setupUi(Dialog)
+                    result = Dialog.exec_()
+                    if result == QtWidgets.QDialog.Accepted:
+                        if self.radioButton.isChecked() == True:
+                            self.myProducts()
+                        else:
+                            self.auction()
+                else:
+                    QMessageBox.warning(self.MainWindow, "Ошибка", "Удалять товар с торгов допускается только тот который выставили вы!!!")
+        else:
+            row = self.tableWidget_2.currentRow() # Номер строки
+            if self.tableWidget_2.currentRow() != -1:
+                te = (self.tableWidget_2.item(row, 4).text())# Определяем текст строки 
+                if te == '-':
+                    Dialog = QtWidgets.QDialog()
+                    ui = УдалениеТовара.Ui_Dialog(n, t, u)
+                    ui.setupUi(Dialog)
+                    result = Dialog.exec_()
+                    if result == QtWidgets.QDialog.Accepted:
+                        if self.radioButton.isChecked() == True:
+                            self.myProducts()
+                        else:
+                            self.auction()
+                else:
+                    QMessageBox.warning(self.MainWindow, "Ошибка", "Выставить можно только тот товар который не был продан")
 
 if __name__ == "__main__":
     import sys
@@ -644,4 +718,334 @@ if __name__ == "__main__":
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)"""
+        MainWindow.setStatusBar(self.statusbar)
+        self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
+        self.tableWidget_2.itemSelectionChanged.connect(self.EditingBlock_2)
+        
+        self.r = []
+        self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
+        self.pushButton_4.clicked.connect(functools.partial(self.products_window))
+        self.pushButton_5.setVisible(root)
+        self.pushButton_5.clicked.connect(functools.partial(self.UA))
+        self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 
+                                                            'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )',
+                                                            self.r, 8))
+        self.pushButton_9.clicked.connect(functools.partial(self.editMWT1, 'editMWT1'))
+        self.pushButton_10.clicked.connect(functools.partial(self.editMWT2, 'editMWT2'))
+        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?', self.r, 11 ))
+        
+        self.tableWidget.itemSelectionChanged.connect(functools.partial(self.click_of_table, 1))
+        self.tableWidget_2.itemSelectionChanged.connect(functools.partial(self.click_of_table, 2))
+
+        self.radioButton.clicked.connect(self.myProducts)
+        
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label.setText(_translate("MainWindow",
+                                      "<html><head/><body><p><span style=\" font-size:14pt;\">Данные администратора</span></p></body></html>"))       
+        self.pushButton_3.setText(_translate("MainWindow", "Просмотр истории торгов"))
+        self.pushButton_4.setText(_translate("MainWindow", "Лоты"))
+        self.pushButton_5.setText(_translate("MainWindow", "Пользователи/Админы"))
+        self.label_2.setText(_translate("MainWindow",
+                                        "<html><head/><body><p><span style=\" font-size:14pt;\">Баланс</span></p></body></html>"))
+        self.pushButton_6.setText(_translate("MainWindow", "Пополнения баланса"))
+        self.pushButton_7.setText(_translate("MainWindow", "Вывести деньги"))
+        self.label_3.setText(_translate("MainWindow",
+                                        "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">100$</span></p></body></html>"))
+        self.label_4.setText(_translate("MainWindow",
+                                        "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые участвуют в аукционе</span></p></body></html>"))
+        item = self.tableWidget.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Номер лота"))
+        item = self.tableWidget.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Описание и доп. информация"))
+        item = self.tableWidget.horizontalHeaderItem(2)
+        item.setText(_translate("MainWindow", "Фото товара"))
+        item = self.tableWidget.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Стартовая цена товара"))
+        item = self.tableWidget.horizontalHeaderItem(4)
+        item.setText(_translate("MainWindow", "дложенная цена"))
+        item = self.tableWidget.horizontalHeaderItem(5)
+        item.setText(_translate("MainWindow", "Время начала аукциона"))
+        item = self.tableWidget.horizontalHeaderItem(6)
+        item.setText(_translate("MainWindow", "Время окончания аукциона"))
+        item = self.tableWidget.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Продавец"))
+        self.label_5.setText(_translate("MainWindow",
+                                        "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые купили или у которых вышло время аукциона</span></p></body></html>"))
+        self.pushButton_8.setText(_translate("MainWindow", "Удалить выделенный товар"))
+        self.pushButton_9.setText(_translate("MainWindow", "Редактировать"))
+        self.radioButton.setText(_translate("MainWindow", "Мои товары"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Торги "))
+        item = self.tableWidget_2.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Номер лота"))
+        item = self.tableWidget_2.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Описание и доп. информация"))
+        item = self.tableWidget_2.horizontalHeaderItem(2)
+        item.setText(_translate("MainWindow", "Фото товара"))
+        item = self.tableWidget_2.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Стартовая цена товара"))
+        item = self.tableWidget_2.horizontalHeaderItem(4)
+        item.setText(_translate("MainWindow", "Предложенная ценна"))
+        item = self.tableWidget_2.horizontalHeaderItem(5)
+        item.setText(_translate("MainWindow", "Статус"))
+        item = self.tableWidget_2.horizontalHeaderItem(6)
+        item.setText(_translate("MainWindow", "Покупатель"))
+        item = self.tableWidget_2.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Продавец"))
+        self.pushButton_10.setText(_translate("MainWindow", "Редактировать"))
+        self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
+                                                            "тавар на торги вновь"))
+        self.tableWidget.resizeColumnsToContents()
+        self.tableWidget_2.resizeColumnsToContents()
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
+
+    # Погружаем только те товары которые выставлял текущей администратор
+    def myProducts(self):
+        if self.radioButton.isChecked() == True: # Определяем включена кнопка или нет 
+            home_page = db.myProducts_db(self.name) #  Погружаем с БД только те товары который выставил данный администратор  
+            table, tableNULL, table1, table1NULL = home_page[0], home_page[1], home_page[2], home_page[3]
+            self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
+            # Заполняем сталбцы с окончанием торгов и стартовую цену лота
+            for k in range(len(table)):
+                self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table[k][0])))
+                self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table[k][1])))
+                self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table[k][2])))
+                self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table[k][3])))
+                self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
+                self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table[k][5])))
+                self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table[k][6])))
+                self.tableWidget.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table[k][7])))
+
+            for k in range(len(tableNULL)):
+                self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
+                self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))
+                self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
+                self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
+                self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem('-'))
+                self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
+                self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+                self.tableWidget.setItem((k + len(table)), 7, QtWidgets.QTableWidgetItem(str(tableNULL[k][6])))
+
+            self.tableWidget.setSortingEnabled(True) # Разрешаем сортировку табли
+                
+            self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
+            for k in range(len(table1)):
+                self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
+                self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
+                self.tableWidget_2.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table1[k][2])))
+                self.tableWidget_2.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table1[k][3])))
+                self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
+                self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
+                self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table1[k][6])))
+                self.tableWidget_2.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table1[k][7])))
+
+            for k in range(len(table1NULL)):
+                self.tableWidget_2.setItem(k + len(table1), 0, QtWidgets.QTableWidgetItem(str(table1NULL[k][0])))
+                self.tableWidget_2.setItem(k + len(table1), 1, QtWidgets.QTableWidgetItem(str(table1NULL[k][1])))
+                self.tableWidget_2.setItem(k + len(table1), 2, QtWidgets.QTableWidgetItem(str(table1NULL[k][2])))
+                self.tableWidget_2.setItem(k + len(table1), 3, QtWidgets.QTableWidgetItem(str(table1NULL[k][3])))
+                self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
+                self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
+                self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
+                self.tableWidget_2.setItem(k + len(table1), 7, QtWidgets.QTableWidgetItem(str(table1NULL[k][5])))
+            
+            self.tableWidget_2.setSortingEnabled(True) # Разрешаем сортировку табли
+            self.tableWidget.resizeColumnsToContents()
+            self.tableWidget_2.resizeColumnsToContents()
+        else:
+            self.auction()
+
+
+    #Отслеживаем нажатые ячейки 
+    def click_of_table(self, n):
+        self.r.clear()
+        if n == 1:
+            row = self.tableWidget.currentRow() # Номер строки
+            self.r.append(self.tableWidget.item(row, 0).text())
+        elif n == 2:
+            row = self.tableWidget_2.currentRow() # Номер строки
+            self.r.append(self.tableWidget_2.item(row, 0).text())
+
+    # Редактировании верхней таблицы 
+    def editMWT1(self, k):
+        try:     
+            row = self.tableWidget.currentRow()# Номер строки
+            te = (self.tableWidget.item(row, 7).text())
+            date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
+            dt_now = datetime.datetime.today()
+            if date_time_obj < dt_now:
+                if te == self.name:
+                    p = []
+                    for s in range(self.tableWidget.columnCount()):
+                        if s != 4:
+                            p.append(self.tableWidget.item(row, s).text()) 
+                    Dialog = QtWidgets.QDialog()
+                    ui = editMW.Ui_Dialog(k, p)
+                    ui.setupUi(Dialog)
+                    result = Dialog.exec_()
+                    if result == QtWidgets.QDialog.Rejected:
+                        if self.radioButton.isChecked() == True:
+                            self.myProducts()
+                        else:
+                            self.auction()
+                else:
+                    QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать товар можно только тот который выставили вы!!!")
+            else:
+                QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "Редактировать разрешено только лоты, в которых не началось время торгов")
+        except AttributeError: 
+            QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
+
+    # Редактировании нижней  таблицы
+    def editMWT2(self, k):
+        try:
+            row = self.tableWidget_2.currentRow()
+            p = []
+            for s in range(self.tableWidget_2.columnCount()):
+                if s != 4 and s != 6 and s != 5:
+                    p.append(self.tableWidget_2.item(row, s).text()) 
+            Dialog = QtWidgets.QDialog()
+            ui = editMW.Ui_Dialog(k, p)
+            ui.setupUi(Dialog)
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Rejected:
+                if self.radioButton.isChecked() == True:
+                    self.myProducts()
+                else:
+                    self.auction()
+        except AttributeError: 
+            QMessageBox.warning(self.MainWindow, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
+  
+    # Заполнение таблиц на главной страницы 
+    def auction(self):
+        home_page = db.Auction() 
+        table, tableNULL, table1, table1NULL = home_page[0], home_page[1], home_page[2], home_page[3]
+        self.tableWidget.setRowCount(len(table) + len(tableNULL))  # Создаем строки в таблице
+        # Заполняем сталбцы с окончанием торгов и стартовую цену лота
+        for k in range(len(table)):
+            self.tableWidget.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table[k][0])))
+            self.tableWidget.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table[k][1])))
+            self.tableWidget.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table[k][2])))
+            self.tableWidget.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table[k][3])))
+            self.tableWidget.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table[k][4])))
+            self.tableWidget.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table[k][5])))
+            self.tableWidget.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table[k][6])))
+            self.tableWidget.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table[k][7])))
+
+        for k in range(len(tableNULL)):
+            self.tableWidget.setItem((k + len(table)), 0, QtWidgets.QTableWidgetItem(str(tableNULL[k][0])))
+            self.tableWidget.setItem((k + len(table)), 1, QtWidgets.QTableWidgetItem(str(tableNULL[k][1])))
+            self.tableWidget.setItem((k + len(table)), 2, QtWidgets.QTableWidgetItem(str(tableNULL[k][2])))
+            self.tableWidget.setItem((k + len(table)), 3, QtWidgets.QTableWidgetItem(str(tableNULL[k][3])))
+            self.tableWidget.setItem((k + len(table)), 4, QtWidgets.QTableWidgetItem('-'))
+            self.tableWidget.setItem((k + len(table)), 5, QtWidgets.QTableWidgetItem(str(tableNULL[k][4])))
+            self.tableWidget.setItem((k + len(table)), 6, QtWidgets.QTableWidgetItem(str(tableNULL[k][5])))
+            self.tableWidget.setItem((k + len(table)), 7, QtWidgets.QTableWidgetItem(str(tableNULL[k][6])))
+
+        self.tableWidget.setSortingEnabled(True) # Разрешаем сортировку табли
+            
+        self.tableWidget_2.setRowCount(len(table1) + len(table1NULL)) # Создаем строки в таблице# Заполняем сталбцы с окончанием торгов и стартовую цену лота
+        for k in range(len(table1)):
+            self.tableWidget_2.setItem(k, 0, QtWidgets.QTableWidgetItem(str(table1[k][0])))
+            self.tableWidget_2.setItem(k, 1, QtWidgets.QTableWidgetItem(str(table1[k][1])))
+            self.tableWidget_2.setItem(k, 2, QtWidgets.QTableWidgetItem(str(table1[k][2])))
+            self.tableWidget_2.setItem(k, 3, QtWidgets.QTableWidgetItem(str(table1[k][3])))
+            self.tableWidget_2.setItem(k, 4, QtWidgets.QTableWidgetItem(str(table1[k][4])))
+            self.tableWidget_2.setItem(k, 5, QtWidgets.QTableWidgetItem(str(table1[k][5])))
+            self.tableWidget_2.setItem(k, 6, QtWidgets.QTableWidgetItem(str(table1[k][6])))
+            self.tableWidget_2.setItem(k, 7, QtWidgets.QTableWidgetItem(str(table1[k][7])))
+
+        for k in range(len(table1NULL)):
+            self.tableWidget_2.setItem(k + len(table1), 0, QtWidgets.QTableWidgetItem(str(table1NULL[k][0])))
+            self.tableWidget_2.setItem(k + len(table1), 1, QtWidgets.QTableWidgetItem(str(table1NULL[k][1])))
+            self.tableWidget_2.setItem(k + len(table1), 2, QtWidgets.QTableWidgetItem(str(table1NULL[k][2])))
+            self.tableWidget_2.setItem(k + len(table1), 3, QtWidgets.QTableWidgetItem(str(table1NULL[k][3])))
+            self.tableWidget_2.setItem(k + len(table1), 4, QtWidgets.QTableWidgetItem('-'))
+            self.tableWidget_2.setItem(k + len(table1), 5, QtWidgets.QTableWidgetItem(str(table1NULL[k][4])))
+            self.tableWidget_2.setItem(k + len(table1), 6, QtWidgets.QTableWidgetItem('-'))
+            self.tableWidget_2.setItem(k + len(table1), 7, QtWidgets.QTableWidgetItem(str(table1NULL[k][5])))
+
+        self.tableWidget_2.setSortingEnabled(True) # Разрешаем сортировку табли
+
+    # Блокируем изменения ячейки
+    def EditingBlock(self):
+        row = self.tableWidget.currentRow()
+        date_time_obj = datetime.datetime.strptime(self.tableWidget.item(row, 5).text(), '%Y-%m-%d %H:%M')
+        dt_now = datetime.datetime.today()
+        if date_time_obj > dt_now:
+            it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
+            it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+        else:
+            it = self.tableWidget.item(self.tableWidget.currentRow(), self.tableWidget.currentColumn())
+            it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+
+    def EditingBlock_2(self):
+        it = self.tableWidget_2.item(self.tableWidget_2.currentRow(), self.tableWidget_2.currentColumn())
+        it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
+
+    def ИТ(self):
+        Dialog = QtWidgets.QDialog()
+        ui = ИсторияТоргов.Ui_Dialog()
+        ui.setupUi(Dialog)
+        ui.AddTradingHistory()
+        Dialog.exec_()
+
+    def UA(self):
+        Dialog = QtWidgets.QDialog()
+        ui = user_admin_window.Ui_Dialog()
+        ui.setupUi(Dialog)
+        ui.fill_admin_table()
+        ui.fill_user_table()
+        Dialog.exec_()
+
+    def products_window(self):
+        Dialog = QtWidgets.QDialog()
+        ui = products_window.Ui_Dialog()
+        ui.setupUi(Dialog)
+        ui.fill_product_table()
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            if self.radioButton.isChecked() == True:
+                self.myProducts()
+            else:
+                self.auction()
+
+    def Confirmation(self, n, t, u):
+        if u == 8:
+            row = self.tableWidget.currentRow() # Номер строки
+            te = (self.tableWidget.item(row, 7).text())
+            if te == self.name:
+                Dialog = QtWidgets.QDialog()
+                ui = УдалениеТовара.Ui_Dialog(n, t, u)
+                ui.setupUi(Dialog)
+                result = Dialog.exec_()
+                if result == QtWidgets.QDialog.Accepted:
+                    if self.radioButton.isChecked() == True:
+                        self.myProducts()
+                    else:
+                        self.auction()
+            else:
+                QMessageBox.warning(self.MainWindow, "Ошибка", "Удалять товар с торгов допускается только тот который выставили вы!!!")
+        else:
+            Dialog = QtWidgets.QDialog()
+            ui = УдалениеТовара.Ui_Dialog(n, t, u)
+            ui.setupUi(Dialog)
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Accepted:
+                if self.radioButton.isChecked() == True:
+                    self.myProducts()
+                else:
+                    self.auction()
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    ui.auction()
+    MainWindow.show()
+    sys.exit(app.exec_())"""
