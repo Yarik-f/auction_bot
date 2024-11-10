@@ -59,7 +59,7 @@ class Ui_Dialog(object):
         self.pushButton_3.setText(_translate("Dialog", "Удалить"))
         self.pushButton_4.setText(_translate("Dialog", "Редактировать"))
 
-    def fill_product_table(self):
+    def fill_lot_table(self):
         self.tableWidget.clearContents()
         products = db.get_lot_data()
 
@@ -101,9 +101,19 @@ class Ui_Dialog(object):
     def child_window(self, check):
         selected_items = self.tableWidget.selectedItems()
         lot = self.get_lot()
+        title = lot[1]
+        description = lot[2]
+        location = lot[3]
+        starting_price = lot[4]
+        seller = lot[5]
+        s_time = lot[6]
+        e_time = lot[7]
+        document_type = lot[8]
+        image_path = lot[9]
+        status = lot[10]
         Dialog = QtWidgets.QDialog()
         ui = product_child_window.Ui_Dialog()
-        print(selected_items)
+
         if lot == None:
             ui.setupUi(Dialog, check)
         else:
@@ -113,33 +123,24 @@ class Ui_Dialog(object):
             ui.table()
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Accepted:
-                self.fill_product_table()
-        elif check == 'edit' and selected_items:
-            title = lot[1]
-            description = lot[2]
-            location = lot[3]
-            starting_price = lot[4]
-            seller = lot[5]
-            s_time = lot[6]
-            e_time = lot[7]
-            document_type = lot[8]
-            image_path = lot[9]
-            status = lot[10]
+                self.fill_lot_table()
+        elif check == 'edit' and selected_items and status != 'В процессе':
             ui.edit_table(title, description, location, starting_price, seller, s_time, e_time, document_type, image_path, status)
             result = Dialog.exec_()
             if result == QtWidgets.QDialog.Accepted:
-                self.fill_product_table()
+                self.fill_lot_table()
         else:
-            QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
+            QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите лот который не участвует в аукционе перед редактированием(Продан, Не продан).")
 
     def delete_product(self):
         selected_items = self.tableWidget.selectedItems()
-        product = self.get_lot()
-        if selected_items:
-            db.delete_lot_and_images(product[0])
-            self.fill_product_table()
+        lot = self.get_lot()
+
+        if selected_items and lot[10] != 'В процессе':
+            db.delete_lot_and_images(lot[0])
+            self.fill_lot_table()
         else:
-            QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите строку перед созданием лота.")
+            QMessageBox.warning(self.Dialog, "Ошибка", "Пожалуйста, выберите лот который не участвует в аукционе перед удалением(Продан, Не продан).")
     def save_and_close(self):
         self.Dialog.accept()
 
@@ -151,6 +152,6 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
-    ui.fill_product_table()
+    ui.fill_lot_table()
     Dialog.show()
     sys.exit(app.exec_())

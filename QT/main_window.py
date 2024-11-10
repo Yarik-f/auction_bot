@@ -453,7 +453,7 @@ class Ui_MainWindow(object):
         Dialog = QtWidgets.QDialog()
         ui = products_window.Ui_Dialog()
         ui.setupUi(Dialog)
-        ui.fill_product_table()
+        ui.fill_lot_table()
         result = Dialog.exec_()
         if result == QtWidgets.QDialog.Accepted:
             if self.radioButton.isChecked() == True:
