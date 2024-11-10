@@ -11,8 +11,8 @@ import telebot
 from telebot import types
 
 # Инициализация бота
-# bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
-bot = telebot.TeleBot('7144969796:AAGdNUJCKmaICG6bOP0hh2d5s4s71iZl7sc')
+bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
+#
 channel_id = '@aucton_bot'
 
 # Хранение баланса пользователей
@@ -148,13 +148,13 @@ def send_auction_lot():
 
             target_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
             time_send = datetime.now() - target_time
-            if 0 <= time_send.total_seconds() <= 10:
-                message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка: {starting_price}\nТекущая ставка: Пока что хз'
+            if 0 <= time_send.total_seconds() <= 300:
+                message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка: {starting_price}\nТекущая ставка: --'
                 lot_data = (message, image_path, datetime.now(), lot_id)
                 threading.Thread(target=send_lot_at_time, args=(lot_data,)).start()
                 processed_lots.add(lot_id)
             elif target_time > datetime.now():
-                message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка: {starting_price}\nТекущая ставка: Пока что хз'
+                message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка: {starting_price}\nТекущая ставка: --'
                 lot_data = (message, image_path, target_time, lot_id)
                 threading.Thread(target=send_lot_at_time, args=(lot_data,)).start()
                 processed_lots.add(lot_id)
