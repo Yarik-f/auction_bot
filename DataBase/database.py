@@ -15,11 +15,19 @@ def item_is_not_editable(table):
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
 
 
-class Database: 
+class Database:
     def __init__(self):
         self.con = sql.connect(db_path)
+
     def create_table(self):
         with sql.connect(db_path) as self.con:
+            self.con.execute('''
+                CREATE TABLE IF NOT EXISTS Messages (
+                message_id INTEGER,
+                lot_id INTEGER,
+                FOREIGN KEY (lot_id) REFERENCES Lots(lot_id)
+                )
+                ''')
             self.con.execute('''
                 CREATE TABLE IF NOT EXISTS Roles (
                 role_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +44,7 @@ class Database:
                 successful_bids INTEGER DEFAULT 0,
                 auto_bid_access BOOLEAN DEFAULT 0,
                 is_banned BOOLEAN DEFAULT 0,
-                FOREIGN KEY (role_id) REFERENCES roles(role_id)
+                FOREIGN KEY (role_id) REFERENCES Roles(role_id)
                 )
                 ''')
             self.con.execute('''
@@ -48,7 +56,7 @@ class Database:
                 role_id INTEGER,
                 commission_rate DECIMAL DEFAULT 5,
                 penalties INTEGER DEFAULT 0,
-                FOREIGN KEY (role_id) REFERENCES roles(role_id)
+                FOREIGN KEY (role_id) REFERENCES Roles(role_id)
                 )
                 ''')
             self.con.execute('''
@@ -129,9 +137,12 @@ class Database:
                 FOREIGN KEY (buyer_id) REFERENCES Users(user_id)
                 )
                 ''')
+            self.con.commit()
+
     def get_data(self, table, name_table, data):
         for item in data[name_table]:
             self.con.execute(table, item)
+
     def fill_table(self, data):
         sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
         sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
@@ -155,8 +166,10 @@ class Database:
         self.get_data(sql_insert_strikes, 'strikes', data)
         self.get_data(sql_insert_transfer_documents, 'transfer_documents', data)
         self.con.commit()
+
     def clear_data(self):
         with self.con:
+            self.con.execute("DELETE FROM Messages")
             self.con.execute("DELETE FROM Roles")
             self.con.execute("DELETE FROM Users")
             self.con.execute("DELETE FROM Admins")
@@ -168,8 +181,10 @@ class Database:
             self.con.execute("DELETE FROM Strikes")
             self.con.execute("DELETE FROM Transfer_documents")
         self.con.commit()
+
     def delete_table(self):
         with self.con:
+            self.con.execute("DROP TABLE IF EXISTS Messages")
             self.con.execute("DROP TABLE IF EXISTS Roles")
             self.con.execute("DROP TABLE IF EXISTS Users")
             self.con.execute("DROP TABLE IF EXISTS Admins")
@@ -181,10 +196,12 @@ class Database:
             self.con.execute("DROP TABLE IF EXISTS Strikes")
             self.con.execute("DROP TABLE IF EXISTS Transfer_documents")
         self.con.commit()
+
     def get_table_data(self, table_name):
         data = self.con.execute(f'''SELECT * FROM {table_name}''')
         data = data.fetchall()
         return data
+
     def get_user_data(self):
         data = self.con.execute('''
             SELECT u.username, r.role_name, u.balance, u.successful_bids, u.auto_bid_access, u.is_banned 
@@ -194,10 +211,12 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_admin_id(self, username):
         query = '''SELECT admin_id FROM Admins WHERE username = ?'''
         data = self.con.execute(query, (username,)).fetchone()
         return data[0]
+
     def get_admin_data(self):
         data = self.con.execute('''
             SELECT a.username, a.password, r.role_name, a.balance, a.commission_rate, a.penalties
@@ -206,6 +225,7 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_lot_data(self):
         data = self.con.execute('''
             SELECT l.title, l.description, l.location, l.starting_price, a.username,
@@ -216,6 +236,7 @@ class Database:
         ''')
         data = data.fetchall()
         return data
+
     def get_id_lot(self, title, description):
         title = f'{title}'
         description = f'{description}'
@@ -225,29 +246,38 @@ class Database:
             WHERE title = ? AND description = ?'''
         data = self.con.execute(query, (title, description)).fetchone()
         return data[0]
-    def create_lot(self, title, description, location, starting_price, seller_id, start_time, end_time, document_type, status):
+
+    def create_lot(self, title, description, location, starting_price, seller_id, start_time, end_time, document_type,
+                   status):
         sql_insert_lots = "INSERT INTO Lots (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
         self.con.execute(sql_insert_lots,
-                         [title, description, location, starting_price, seller_id, start_time, end_time, document_type, status])
+                         [title, description, location, starting_price, seller_id, start_time, end_time, document_type,
+                          status])
         self.con.commit()
+
     def add_lot_image(self, image_pt, lot_id):
         sql_insert_product_images = "INSERT INTO Lot_images (image_pt, lot_id) values(?, ?)"
         self.con.execute(sql_insert_product_images,
                          [image_pt, lot_id])
         self.con.commit()
-    def update_lot(self, lot_id, title, description, location, starting_price, seller_id, start_time, end_time, document_type, status):
+
+    def update_lot(self, lot_id, title, description, location, starting_price, seller_id, start_time, end_time,
+                   document_type, status):
         query = """UPDATE Lots 
                    SET title = ?, description = ?, location = ?, starting_price = ?, seller_id = ?, start_time = ?, end_time = ?, 
                    document_type = ?, status = ? 
                    WHERE lot_id = ?"""
-        self.con.execute(query, (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status, lot_id))
+        self.con.execute(query, (
+        title, description, location, starting_price, seller_id, start_time, end_time, document_type, status, lot_id))
         self.con.commit()
+
     def update_lot_image(self, image_path, lot_id):
         query = """UPDATE Lot_images 
                    SET image_pt = ? 
                    WHERE lot_id = ?"""
         self.con.execute(query, (image_path, lot_id))
         self.con.commit()
+
     def delete_lot_and_images(self, lot_id):
 
         self.con.execute("BEGIN TRANSACTION")
@@ -260,19 +290,27 @@ class Database:
 
         self.con.commit()
         self.con.rollback()
+
     def add_user(self, username):
         with sql.connect(db_path) as self.con:
             sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
             self.con.execute(sql_insert_users,
-                                [username, 1, 0, 0, 0, 0])
+                             [username, 1, 0, 0, 0, 0])
             self.con.commit()
             self.check_user(username)
+    def get_user_id(self, username):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT user_id FROM Users WHERE username = ?"
+            data = self.con.execute(query, (username,)).fetchone()
+            return data[0]
+
     def check_role(self, name_table, username):
         with sql.connect(db_path) as self.con:
             query = f"SELECT role_id FROM {name_table} WHERE username = ?"
             data = self.con.execute(query, (username,)).fetchone()
             print(data[0])
             return data[0]
+
     def check_user(self, username):
         with sql.connect(db_path) as self.con:
             user_query = "SELECT username FROM Users WHERE username = ?"
@@ -296,9 +334,10 @@ class Database:
                 return 0
             else:
                 print('Ошибка')
+
     def get_lot_data_auction(self):
         with sql.connect(db_path) as self.con:
-            query = f"""
+            query = """
                 SELECT l.lot_id, l.starting_price, l.start_time, l.title, l.description, l.location, i.image_pt
                 FROM Lots l
                 JOIN Lot_images i ON l.lot_id = i.lot_id
@@ -306,22 +345,76 @@ class Database:
             """
             data = self.con.execute(query).fetchall()
             return data
-            
+
+    def get_lot_data_by_id(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = """
+                SELECT l.lot_id, l.starting_price, l.start_time, l.title, l.description, l.location, i.image_tg
+                FROM Lots l
+                JOIN Lot_images i ON l.lot_id = i.lot_id
+                WHERE l.lot_id = ?
+            """
+            data = self.con.execute(query, (lot_id,)).fetchall()
+            return data
+
+    def get_end_time(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT end_time FROM Lots WHERE lot_id = ?"
+            data = self.con.execute(query, (lot_id,)).fetchone()
+            return data[0]
+
+    def update_image_tg(self, image_tg, image_path):
+        with sql.connect(db_path) as self.con:
+            query = """UPDATE Lot_images 
+                               SET image_tg = ? 
+                               WHERE image_pt = ?"""
+            self.con.execute(query, (image_tg, image_path))
+            self.con.commit()
+    def add_message(self, message_id, lot_id):
+        with sql.connect(db_path) as self.con:
+            sql_insert_users = "INSERT INTO Messages (message_id, lot_id) values(?, ?)"
+            self.con.execute(sql_insert_users,[message_id, lot_id])
+            self.con.commit()
+    def get_message_id(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT message_id FROM Messages WHERE lot_id = ?"
+            data = self.con.execute(query, (lot_id,)).fetchone()
+            return data[0]
+    def get_bid_lot(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT MAX(bid_amount) FROM Bids WHERE lot_id = ?"
+            data = self.con.execute(query, (lot_id,)).fetchone()
+            return data[0]
+    def add_bid(self, lot_id, user_id, amount, bid_time):
+        with sql.connect(db_path) as self.con:
+            sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount, bid_time) values(?, ?, ?, ?)"
+            self.con.execute(sql_insert_bids, [lot_id, user_id, amount, bid_time])
+            self.con.commit()
+    def get_bid_user(self, user_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT bid_id FROM Bids WHERE user_id = ?"
+            data = self.con.execute(query, (user_id,)).fetchone()
+            return data[0]
+    def update_bid_user(self, bid_amount, bid_time, user_id):
+        with sql.connect(db_path) as self.con:
+            query = "UPDATE Bids SET bid_amount = ?, bid_time = ? WHERE user_id = ?"
+            self.con.execute(query, (bid_amount, bid_time, user_id))
+            self.con.commit()
     def addBalance(self, u, amount):
         with sql.connect(db_path) as self.con:
             n = self.con.execute(f"""SELECT balance FROM Users
-                                            WHERE Users.username == '{u}'   """) # Узнаем баланс пользователя 
+                                            WHERE Users.username == '{u}'   """)  # Узнаем баланс пользователя
             n = n.fetchall()[0][0]
-            n = n + amount # Суммируем текущий баланс с суммой пополнения
+            n = n + amount  # Суммируем текущий баланс с суммой пополнения
             self.con.execute(f"""UPDATE Users
                                     SET balance = {n}
-                                    WHERE Users.username == '{u}'  """) # Вносим изменения баланса в БД
+                                    WHERE Users.username == '{u}'  """)  # Вносим изменения баланса в БД
             return n
 
     def balance_db(self, u):
         with sql.connect(db_path) as self.con:
             n = self.con.execute(f"""SELECT balance FROM Users
-                                            WHERE Users.username == '{u}'  """) # Узнаем баланс пользователя 
+                                            WHERE Users.username == '{u}'  """)  # Узнаем баланс пользователя
             n = n.fetchall()[0][0]
             return n
 
@@ -339,7 +432,7 @@ class Database:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
-                
+
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
@@ -365,7 +458,7 @@ class Database:
                                             WHERE Lots.end_time > '{dt_now}' AND Bids.lot_id IS NULL
                                             """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             tableNULL = tableNULL.fetchall()
-            
+
             table1 = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, final_price, status, Users.username, Admins.username FROM Lots
                                         INNER JOIN Auction_history 
                                             ON Lots.lot_id = Auction_history.lot_id
@@ -389,13 +482,13 @@ class Database:
             table1NULL = table1NULL.fetchall()
 
             return [table, tableNULL, table1, table1NULL]
-        
+
     # Заполнения таблицы моих товаров на аукционе     
     def myProducts_db(self, name):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
         with self.con:
             r = self.con.execute(f"""SELECT admin_id FROM Admins
-                                                WHERE username = '{name}'   """) 
+                                                WHERE username = '{name}'   """)
             r = r.fetchall()
 
             table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time, username FROM Lots
@@ -443,7 +536,7 @@ class Database:
             table1NULL = table1NULL.fetchall()
 
             return [table, tableNULL, table1, table1NULL]
-        
+
     # Функция для заполнения таблицы история торгов 
     def AddTradingHistory_db(self):
         with self.con:
@@ -456,7 +549,7 @@ class Database:
                                                 ON Bids.user_id = Users.user_id""")  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table = table.fetchall()
             return [table]
-    
+
     # Функция для заполнения таблицы история торгов после нажатой кнопки поиск      
     def search_db(self, textSearch):
         with self.con:
@@ -470,86 +563,87 @@ class Database:
                                             WHERE description = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
             table = table.fetchall()
             return [table]
-        
-# Функция добавления значений в сам файл SQL               
+
+    # Функция добавления значений в сам файл SQL
     def add_user_db(self, data):
         with self.con:
             self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
-                              values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""") # Происходит дабовления строки в SQL Таблицу
-            
+                              values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""")  # Происходит дабовления строки в SQL Таблицу
+
     def add_user_A_db(self, data):
         with self.con:
             self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
-                              values('{data[0]}', '{data[1]}', {data[2]}, {data[3]}, {data[4]}, {data[5]})""") # Происходит дабовления строки в SQL Таблицу
-            
+                              values('{data[0]}', '{data[1]}', {data[2]}, {data[3]}, {data[4]}, {data[5]})""")  # Происходит дабовления строки в SQL Таблицу
+
     def delete_User_db(self, d):
         with self.con:
-                self.con.execute(f"""DELETE FROM Users  
+            self.con.execute(f"""DELETE FROM Users  
                                      WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
-                
+
     def delete_Admin_db(self, d):
         with self.con:
-                self.con.execute(f"""DELETE FROM Admins  
+            self.con.execute(f"""DELETE FROM Admins  
                                      WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
-                
+
     def edit_User_db(self, p, d):
         with self.con:
-                if p[1] == 1:
-                    r = self.con.execute(f"""SELECT user_id FROM Users
-                                                WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""") 
-                    r = r.fetchall()
-                    
-                    self.con.execute(f"""UPDATE Users
+            if p[1] == 1:
+                r = self.con.execute(f"""SELECT user_id FROM Users
+                                                WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""")
+                r = r.fetchall()
+
+                self.con.execute(f"""UPDATE Users
                                             SET username = '{p[0]}', successful_bids = {p[2]}, auto_bid_access = {p[3]}, is_banned = {p[4]}
                                             WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
-                else:
-                    self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
-                              values('{p[0]}', '{p[5]}', {d[2]}, {p[1]}, {5}, {0})""")                 
+            else:
+                self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
+                              values('{p[0]}', '{p[5]}', {d[2]}, {p[1]}, {5}, {0})""")
 
     def edit_Admin_db(self, p, d):
         with self.con:
-                r = self.con.execute(f"""SELECT admin_id FROM Admins
-                                                WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""") 
-                r = r.fetchall()
-                    
-                self.con.execute(f"""UPDATE Admins
+            r = self.con.execute(f"""SELECT admin_id FROM Admins
+                                                WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""")
+            r = r.fetchall()
+
+            self.con.execute(f"""UPDATE Admins
                                             SET username = '{p[0]}', password == '{p[1]}', role_id = {p[2]}, commission_rate = {p[3]}, penalties = {p[4]}
                                             WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
-                    
+
     def edit_MW1_db(self, p):
-        with self.con:             
-                self.con.execute(f"""UPDATE Lots
+        with self.con:
+            self.con.execute(f"""UPDATE Lots
                                         SET description = '{p[1]}', starting_price = {p[3]}, start_time == '{p[4]}', end_time = '{p[5]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки  
-                
-                self.con.execute(f"""UPDATE Lot_images
+
+            self.con.execute(f"""UPDATE Lot_images
                                         SET image_pt = '{p[2]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
-                
+
     def edit_MW2_db(self, p):
         with self.con:
-                self.con.execute(f"""UPDATE Lots
+            self.con.execute(f"""UPDATE Lots
                                         SET description = '{p[1]}', starting_price = {p[3]}
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
-                
-                self.con.execute(f"""UPDATE Lot_images
+
+            self.con.execute(f"""UPDATE Lot_images
                                         SET image_pt = '{p[2]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
-                
+
     def findProduct_db(self, id):
         r = self.con.execute(f"""SELECT title, description, location, starting_price, seller_id, start_time, end_time FROM Lots
-                                                WHERE lot_id = {id} """) 
+                                                WHERE lot_id = {id} """)
         r = r.fetchall()
         return [r[0]]
-    
+
     def addItemToAuction(self, pe):
         with self.con:
             self.con.execute(f"""INSERT INTO Lots (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status)
-                              values('{pe[1]}', '{pe[2]}', '{pe[3]}', {pe[4]}, {pe[0]}, '{pe[5]}', '{pe[6]}', '{pe[7]}', 'В процессе') """) # Происходит дабовления строки в SQL Таблицу
-            
+                              values('{pe[1]}', '{pe[2]}', '{pe[3]}', {pe[4]}, {pe[0]}, '{pe[5]}', '{pe[6]}', '{pe[7]}', 'В процессе') """)  # Происходит дабовления строки в SQL Таблицу
+
             self.con.execute(f"""INSERT INTO Lot_images SELECT NULL, '{pe[8]}', MAX(lot_id) + 1 FROM Lot_images
-                               """) # Происходит дабовления строки в SQL Табл
-            
+                               """)  # Происходит дабовления строки в SQL Табл
+
+
 db = Database()
 
 data_db = {
@@ -581,13 +675,21 @@ data_db = {
         ('tg7', "http://example.com/images/vase.jpg", 7),
     ],
     "lots": [
-        ("Картина", "Красивая картина маслом.", 'Moscow', 1500.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Стандартный", "Продан"),
-        ("Часы", "Стильные наручные часы.", 'Minsk', 750.50, 2, "2024-10-24 10:00", "2024-10-30 10:00", "Ювелирный", "Продан"),
-        ("Серебряная ложка", "Ложка из чистого серебра.", 'Vitebsk', 250.00, 2, "2024-10-24 10:00", "2024-11-02 10:00", "Стандартный", "Продан"),
-        ("Статуэтка", "Статуэтка ручной работы.", 'Grodno', 300.00, 1, "2024-10-24 10:00", "2024-11-05 10:00", "Историч ценный", "Продан"),
-        ("Книга", "Редкое издание книги.", 'Praga', 500.00, 1, "2024-10-24 10:00", "2024-11-01 10:00", "Стандартный", "Продан"),
-        ("Монета", "Антикварная монета.", 'Berlin', 1200.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Историч ценный", "Продан"),
-        ("Ваза", "Стеклянная ваза ручной работы.", 'Moscow', 400.00, 2, "2024-10-24 10:00", "2024-11-03 10:00", "Стандартный", "Продан"),
+        ("Картина", "Красивая картина маслом.", 'Moscow', 1500.00, 1, "2024-10-24 10:00", "2024-10-30 10:00",
+         "Стандартный", "Продан"),
+        ("Часы", "Стильные наручные часы.", 'Minsk', 750.50, 2, "2024-10-24 10:00", "2024-10-30 10:00", "Ювелирный",
+         "Продан"),
+        ("Серебряная ложка", "Ложка из чистого серебра.", 'Vitebsk', 250.00, 2, "2024-10-24 10:00", "2024-11-02 10:00",
+         "Стандартный", "Продан"),
+        ("Статуэтка", "Статуэтка ручной работы.", 'Grodno', 300.00, 1, "2024-10-24 10:00", "2024-11-05 10:00",
+         "Историч ценный", "Продан"),
+        ("Книга", "Редкое издание книги.", 'Praga', 500.00, 1, "2024-10-24 10:00", "2024-11-01 10:00", "Стандартный",
+         "Продан"),
+        (
+        "Монета", "Антикварная монета.", 'Berlin', 1200.00, 1, "2024-10-24 10:00", "2024-10-30 10:00", "Историч ценный",
+        "Продан"),
+        ("Ваза", "Стеклянная ваза ручной работы.", 'Moscow', 400.00, 2, "2024-10-24 10:00", "2024-11-03 10:00",
+         "Стандартный", "Продан"),
     ],
     "bids": [
         (1, 1, 1550.00),
