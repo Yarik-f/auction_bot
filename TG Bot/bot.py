@@ -206,8 +206,8 @@ def start_command(message):
 
         elif check == 2 or check == 3:
             button = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            button.add(types.KeyboardButton('БУГАГАГАГА'), types.KeyboardButton('Пополнить баланс'),
-                       types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
+            button.add(types.KeyboardButton('Добавить товар'), types.KeyboardButton('Удалить товар'),
+                       types.KeyboardButton('Редактировать товар'), types.KeyboardButton('Завершить аукцион'))
             name = message.from_user.first_name
             bot.send_message(message.chat.id, f'Привет, {name}!\nВыберите действие:', reply_markup=button)
 
@@ -225,8 +225,8 @@ def user(message):
 @bot.message_handler(func=lambda message: message.text == 'Войти как админ')
 def admin(message):
     button = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button.add(types.KeyboardButton('БУГАГАГАГА'), types.KeyboardButton('Пополнить баланс'),
-               types.KeyboardButton('ХЗХЗХЗ'), types.KeyboardButton('Назад'))
+    button.add(types.KeyboardButton('Добавить товар'), types.KeyboardButton('Удалить товар'),
+               types.KeyboardButton('Редактировать аукцион'), types.KeyboardButton('Назад'))
 
     bot.send_message(message.chat.id, f'Ну тут еще не придумал:',
                      reply_markup=button)
