@@ -22,6 +22,16 @@ class Database:
     def create_table(self):
         with sql.connect(db_path) as self.con:
             self.con.execute('''
+                CREATE TABLE IF NOT EXISTS Auto_bids (
+                lot_id INTEGER,
+                user_id INTEGER,
+                max_bid INTEGER,
+                current_bid INTEGER,
+                FOREIGN KEY (lot_id) REFERENCES Lots(lot_id),
+                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+                )
+                ''')
+            self.con.execute('''
                 CREATE TABLE IF NOT EXISTS Messages (
                 message_id INTEGER,
                 lot_id INTEGER,
@@ -169,6 +179,7 @@ class Database:
 
     def clear_data(self):
         with self.con:
+            self.con.execute("DELETE FROM Auto_bids")
             self.con.execute("DELETE FROM Messages")
             self.con.execute("DELETE FROM Roles")
             self.con.execute("DELETE FROM Users")
@@ -184,6 +195,7 @@ class Database:
 
     def delete_table(self):
         with self.con:
+            self.con.execute("DROP TABLE IF EXISTS Auto_bids")
             self.con.execute("DROP TABLE IF EXISTS Messages")
             self.con.execute("DROP TABLE IF EXISTS Roles")
             self.con.execute("DROP TABLE IF EXISTS Users")
@@ -384,7 +396,7 @@ class Database:
         with sql.connect(db_path) as self.con:
             query = "SELECT MAX(bid_amount) FROM Bids WHERE lot_id = ?"
             data = self.con.execute(query, (lot_id,)).fetchone()
-            return data[0]
+            return data[0] if data else None
     def add_bid(self, lot_id, user_id, amount, bid_time):
         with sql.connect(db_path) as self.con:
             sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount, bid_time) values(?, ?, ?, ?)"
@@ -394,12 +406,24 @@ class Database:
         with sql.connect(db_path) as self.con:
             query = "SELECT bid_id FROM Bids WHERE user_id = ?"
             data = self.con.execute(query, (user_id,)).fetchone()
-            return data[0]
+            return data[0] if data else None
     def update_bid_user(self, bid_amount, bid_time, user_id):
         with sql.connect(db_path) as self.con:
             query = "UPDATE Bids SET bid_amount = ?, bid_time = ? WHERE user_id = ?"
             self.con.execute(query, (bid_amount, bid_time, user_id))
             self.con.commit()
+
+    def get_auto_bid(self, lot_id, user_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT max_bid FROM Auto_bids WHERE lot_id = ? AND user_id = ?"
+            data = self.con.execute(query, (lot_id, user_id)).fetchone()
+            return data[0] if data else None
+    def add_auto_bid(self, lot_id, user_id, max_bid, current_bid):
+        with sql.connect(db_path) as self.con:
+            sql_insert_auto_bids = "INSERT INTO Auto_bids (lot_id, user_id, max_bid, current_bid) values(?, ?, ?, ?)"
+            self.con.execute(sql_insert_auto_bids,[lot_id, user_id, max_bid, current_bid])
+            self.con.commit()
+
     def addBalance(self, u, amount):
         with sql.connect(db_path) as self.con:
             n = self.con.execute(f"""SELECT balance FROM Users

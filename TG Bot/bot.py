@@ -12,12 +12,14 @@ from telebot import types
 
 # Инициализация бота
 
+bot = telebot.TeleBot('7144969796:AAFbgqLtJrnR0NYZLabca-Kd3gLpB2_bpaE')
 channel_id = '@aucton_bot'
 
 # Хранение баланса пользователей
 user_balances = {}
 
-def create_lot_button(lot_id):
+
+def create_lot_button(lot_id): #Кнопки в канале
     keyboard = types.InlineKeyboardMarkup()
     button_time = types.InlineKeyboardButton("Время", callback_data=f"time_{lot_id}")
     button_info = types.InlineKeyboardButton("Инфо", callback_data="info")
@@ -26,21 +28,26 @@ def create_lot_button(lot_id):
     keyboard.add(button_link)
     return keyboard
 
-def bot_lot_button(lot_id):
+def bot_lot_button(lot_id): #Кнопки в боте
     keyboard = types.InlineKeyboardMarkup()
     button_time = types.InlineKeyboardButton("Время", callback_data=f"time_{lot_id}")
     button_info = types.InlineKeyboardButton("Инфо", callback_data="info")
     button_bid = types.InlineKeyboardButton("Сделать ставку", callback_data=f"bid_{lot_id}")
-    button_invisible_bid = types.InlineKeyboardButton("Настроить скрытую ставку", callback_data=f"bid_{lot_id}")
-    button_my_bid = types.InlineKeyboardButton("Предложить свою ставку", callback_data=f"bid_{lot_id}")
+    button_invisible_bid = types.InlineKeyboardButton("Настроить скрытую ставку", callback_data=f"invise_bid_{lot_id}")
+    button_my_bid = types.InlineKeyboardButton("Предложить свою ставку", callback_data=f"my_bid_{lot_id}")
     keyboard.add(button_time, button_info)
     keyboard.add(button_bid)
     keyboard.add(button_invisible_bid)
     keyboard.add(button_my_bid)
     return keyboard
+def yes_no_button(lot_id, max_bid):
+    keyboard = types.InlineKeyboardMarkup()
+    button_yes = types.InlineKeyboardButton("Да", callback_data=f"yes_{lot_id}:{max_bid}")
+    button_no = types.InlineKeyboardButton("Нет", callback_data="no")
+    keyboard.add(button_yes, button_no)
+    return keyboard
 
-
-def send_lot_at_time(lot_data):
+def send_lot_at_time(lot_data): # Отправка картинки с переданными параметрами(картинка, текст, ...)
     message_text, image_path, target_time, lot_id = lot_data
 
     delay = (target_time - datetime.now()).total_seconds()
@@ -61,62 +68,141 @@ def send_lot_at_time(lot_data):
     else:
         print("Ошибка: Неверный путь к изображению")
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_handler(call):
-    if call.data.startswith("bid_"):
-        lot_id = call.data.split("bid_")[1]
-        bid_time = datetime.now()
-        bid_time = bid_time.strftime('%Y-%m-%d %H:%M')
-        username = call.from_user.username
-        user_id = db.get_user_id(username)
-        lot_data = db.get_lot_data_by_id(lot_id)
-        message_bot_id = call.message.message_id
-        message_id = db.get_message_id(lot_id)
-        if message_id:
-            bid = db.get_bid_lot(lot_id)
-            if bid is None:
+def process_bid(call): # Обработка Ставок
+    lot_id = call.data.split("bid_")[1]
+    bid_time = datetime.now()
+    bid_time = bid_time.strftime('%Y-%m-%d %H:%M')
+    username = call.from_user.username
+    user_id = db.get_user_id(username)
+    lot_data = db.get_lot_data_by_id(lot_id)
+    message_bot_id = call.message.message_id
+    message_id = db.get_message_id(lot_id)
+    print(f'dsds {message_bot_id}')
+    if message_id:
+        bid = db.get_bid_lot(lot_id)
+        print(bid)
+        if bid is None:
+            for lot in lot_data:
+                lot_id, starting_price, start_time, title, description, location, image_path = lot
+                db.add_bid(lot_id, user_id, starting_price, bid_time)
+                bid = db.get_bid_lot(lot_id)
+                message_text = (
+                    f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                    f': {bid + 25}\nТекущая ставка: {bid}')
+                print(message_id)
+                bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                         reply_markup=create_lot_button(lot_id))
+                bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id,
+                                         caption=message_text, reply_markup=bot_lot_button(lot_id))
+        else:
+            yes_bid = db.get_bid_user(user_id)
+            print(yes_bid)
+            if yes_bid:
                 for lot in lot_data:
                     lot_id, starting_price, start_time, title, description, location, image_path = lot
-                    db.add_bid(lot_id, user_id, starting_price, bid_time)
+                    bid = bid + 25
+                    db.update_bid_user(bid, bid_time, user_id)
+                    message_text = (
+                        f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                        f': {bid + 25}\nТекущая ставка: {bid}')
+                    print(
+                        f"Editing message in chat_id={channel_id}, message_id={message_id}, new caption={message_text}")
+                    bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                             reply_markup=create_lot_button(lot_id))
+                    bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id,
+                                             caption=message_text, reply_markup=bot_lot_button(lot_id))
+
+            else:
+                print('fsdfsdfsd')
+                for lot in lot_data:
+                    lot_id, starting_price, start_time, title, description, location, image_path = lot
+                    bid = bid + 25
+                    db.add_bid(lot_id, user_id, bid, bid_time)
+                    message_text = (
+                        f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                        f': {bid + 25}\nТекущая ставка: {bid}')
+                    bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                             reply_markup=create_lot_button(lot_id))
+                    bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id,
+                                             caption=message_text, reply_markup=bot_lot_button(lot_id))
+
+    else:
+        bot.answer_callback_query(call.id, "Лот не найден.")
+
+    bot.answer_callback_query(call.id, f"Вы сделали ставку на лот {lot_id}")  #
+def process_auto_bid(call): #Добавление автоставки, только добавления
+    print(call.data.split("yes_")[1].split(":")[0])
+    lot_id = call.data.split("yes_")[1].split(":")[0]
+    max_bid = call.data.split("yes_")[1].split(":")[1]
+    bid_time = datetime.now()
+    bid_time = bid_time.strftime('%Y-%m-%d %H:%M')
+    username = call.from_user.username
+    user_id = db.get_user_id(username)
+    current_bid = db.get_bid_lot(lot_id)
+    message_bot_id = call.message.message_id
+    message_id = db.get_message_id(lot_id)
+    print(message_bot_id)
+    if message_id:
+        bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
+        print(current_bid)
+        if current_bid is None:
+            lot_data = db.get_lot_data_by_id(lot_id)
+            for lot in lot_data:
+                lot_id, starting_price, start_time, title, description, location, image_path = lot
+                print(lot_id, user_id, max_bid, starting_price)
+                db.add_auto_bid(lot_id, user_id, max_bid, starting_price)
+                db.add_bid(lot_id, user_id, starting_price, bid_time)
+                bid = db.get_bid_lot(lot_id)
+                message_text = (
+                    f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                    f': {bid + 25}\nТекущая ставка: {bid}')
+                print(message_id)
+                bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                         reply_markup=create_lot_button(lot_id))
+                bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text,
+                               reply_markup=bot_lot_button(lot_id))
+        else:
+            yes_bid = db.get_bid_user(user_id)
+            if yes_bid:
+                lot_data = db.get_lot_data_by_id(lot_id)
+                for lot in lot_data:
+                    lot_id, starting_price, start_time, title, description, location, image_path = lot
+                    print(lot_id, user_id, max_bid, starting_price)
                     bid = db.get_bid_lot(lot_id)
+                    bid = bid + 25
+                    db.add_auto_bid(lot_id, user_id, max_bid, bid)
+                    db.update_bid_user(bid, bid_time, user_id)
+
                     message_text = (
                         f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
                         f': {bid + 25}\nТекущая ставка: {bid}')
                     print(message_id)
-                    bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text, reply_markup=create_lot_button(lot_id))
-                    bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id, caption=message_text, reply_markup=bot_lot_button(lot_id))
+                    bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                             reply_markup=create_lot_button(lot_id))
+                    bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text,
+                                   reply_markup=bot_lot_button(lot_id))
             else:
-                yes_bid = db.get_bid_user(user_id)
-                if yes_bid:
-                    for lot in lot_data:
-                        lot_id, starting_price, start_time, title, description, location, image_path = lot
-                        bid = bid + 25
-                        db.update_bid_user(bid, bid_time, user_id)
-                        message_text = (
-                            f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
-                            f': {bid + 25}\nТекущая ставка: {bid}')
-                        print(
-                            f"Editing message in chat_id={channel_id}, message_id={message_id}, new caption={message_text}")
-                        bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text, reply_markup=create_lot_button(lot_id))
-                        bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id,
-                                                 caption=message_text, reply_markup=bot_lot_button(lot_id))
+                lot_data = db.get_lot_data_by_id(lot_id)
+                for lot in lot_data:
+                    lot_id, starting_price, start_time, title, description, location, image_path = lot
+                    print(lot_id, user_id, max_bid, starting_price)
+                    bid = db.get_bid_lot(lot_id)
+                    bid = bid + 25
+                    db.add_auto_bid(lot_id, user_id, max_bid, bid)
+                    db.add_bid(lot_id,user_id,bid,bid_time)
 
-                else:
-                    for lot in lot_data:
-                        lot_id, starting_price, start_time, title, description, location, image_path = lot
-                        bid = bid + 25
-                        db.add_bid(lot_id, user_id, bid, bid_time)
-                        message_text = (
-                            f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
-                            f': {bid + 25}\nТекущая ставка: {bid}')
-                        bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text, reply_markup=create_lot_button(lot_id))
-                        bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id,
-                                                 caption=message_text, reply_markup=bot_lot_button(lot_id))
+                    message_text = (
+                        f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                        f': {bid + 25}\nТекущая ставка: {bid}')
+                    print(message_id)
+                    bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                             reply_markup=create_lot_button(lot_id))
+                    bot.send_photo(chat_id=call.message.chat.id,photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
 
-        else:
-            bot.answer_callback_query(call.id, "Лот не найден.")
-
-        bot.answer_callback_query(call.id, f"Вы сделали ставку на лот {lot_id}")
+@bot.callback_query_handler(func=lambda call: True) #Обработка кнопок
+def callback_handler(call):
+    if call.data.startswith("bid_"):
+        threading.Thread(target=process_bid, args=(call,)).start()
     elif call.data.startswith("time_"):
         lot_id = call.data.split("time_")[1]
 
@@ -131,11 +217,33 @@ def callback_handler(call):
 
         bot.answer_callback_query(call.id, f"Осталось {days} дней: {hours} часов: {minutes} минут: {seconds} секунд")
     elif call.data == "info":
-
         bot.answer_callback_query(call.id, f"После окночания торгов, победитель должен выйти на связь с продавцом самостоятельно в течении суток. Победитель обязан выкупить лот в течении 3-ех дней, после окончания аукциона.\nНЕ ВЫКУП ЛОТА -- БАН", show_alert=True)
+    elif call.data.startswith("my_bid_"):
+        lot_id = call.data.split("my_bid_")[1]
+        bot.answer_callback_query(call.id, f"{lot_id}")
+    elif call.data.startswith("invise_bid_"):
+        lot_id = call.data.split("invise_bid_")[1]
+        username = call.from_user.username
+        user_id = db.get_user_id(username)
+        auto_bid = db.get_auto_bid(lot_id, user_id)
+        print(auto_bid, lot_id, user_id)
+        if auto_bid is None:
+            bot.send_message(call.message.chat.id, "Сколько вы готовы потратить на этот лот? Введите сумму:")
+            bot.register_next_step_handler(call.message, set_max_bid, lot_id)
+        else:
+            bot.send_message(call.message.chat.id, "На этот лот ваша авто ставка уже стоит")
 
+    elif call.data.startswith("yes_"):
+        threading.Thread(target=process_auto_bid, args=(call,)).start()
+    elif call.data == 'no':
+        bot.send_message(call.message.chat.id, "Вы отменили установку авто ставки.")
 
-def send_auction_lot():
+def set_max_bid(message, lot_id):
+    max_bid = int(message.text)
+
+    bot.send_message(message.chat.id, f"Вы готовы потратить: {max_bid} на этот лот.\nВы готовы сделать ставку", reply_markup=yes_no_button(lot_id, max_bid))
+
+def send_auction_lot():# Получение и формирование данных о лоте + обновление через потоки для обработки в реал тайме
     processed_lots = set()
 
     while True:
@@ -147,7 +255,7 @@ def send_auction_lot():
 
             target_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
             time_send = datetime.now() - target_time
-            if 0 <= time_send.total_seconds() <= 300:
+            if 0 <= time_send.total_seconds() <= 300: # Если время старта < нынешнего на 5 минут и меньше
                 message = f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка: {starting_price}\nТекущая ставка: --'
                 lot_data = (message, image_path, datetime.now(), lot_id)
                 threading.Thread(target=send_lot_at_time, args=(lot_data,)).start()
@@ -164,7 +272,7 @@ threading.Thread(target=send_auction_lot, daemon=True).start()
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    if "lot_" in message.text:
+    if "lot_" in message.text: #Отправка и изменение сообщения о лоте в боте
         lot_id = message.text.split("lot_")[1]
         lot_data = db.get_lot_data_by_id(lot_id)
         if lot_data:
