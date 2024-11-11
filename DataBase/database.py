@@ -417,15 +417,33 @@ class Database:
                                             WHERE Users.username == '{u}'  """)  # Узнаем баланс пользователя
             n = n.fetchall()[0][0]
             return n
+        
+    def newbalance_db(self, id):
+        newbalance = self.con.execute(f"""SELECT balance FROM Admins
+                                    WHERE admin_id == '{id}'  """)  # Узнаем баланс пользователя
+        newbalance = newbalance.fetchall()[0][0]
+        return newbalance
 
-    def add_delete(self, n, u):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
+    def adminBalance_db(self, id):
+        newbalance = self.con.execute(f"""SELECT balance FROM Admins
+                                    WHERE admin_id == '{id}'  """)  # Узнаем баланс пользователя
+        newbalance = newbalance.fetchall()[0][0]
+        return newbalance
+
+    def add_delete(self, n, u, newBalance, id):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
             with self.con:
+                print(newBalance, id)
+                newBalance = round(newBalance, 2)
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
-
+                
+                self.con.execute(f"""UPDATE Admins
+                                    SET balance = '{newBalance}'
+                                    WHERE admin_id = {id} """)
+                
         elif u == 11:
             dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M')
             with self.con:
@@ -643,7 +661,13 @@ class Database:
             self.con.execute(f"""INSERT INTO Lot_images SELECT NULL, '{pe[8]}', MAX(lot_id) + 1 FROM Lot_images
                                """)  # Происходит дабовления строки в SQL Табл
 
-
+    def administratorInformation_db(self, username):
+        Information = self.con.execute(f"""SELECT admin_id, username, balance, commission_rate, penalties FROM Admins
+                                                WHERE username = '{username}' """)
+        Information = Information.fetchall()
+        print(Information[0])
+        return Information[0]
+    
 db = Database()
 
 data_db = {

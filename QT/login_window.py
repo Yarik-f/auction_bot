@@ -72,15 +72,16 @@ class Ui_Dialog(object):
                 break
         if login:
             print(root)
-            self.open_main_window(root)
+            Information = db.administratorInformation_db(username)
+            self.open_main_window(root, Information)
         else:
             QMessageBox.warning(None, 'Error', 'Incorrect Username or Password')
 
 
-    def open_main_window(self, root):
+    def open_main_window(self, root, Information):
         self.main_window = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
-        self.ui.setupUi(self.main_window, root)
+        self.ui.setupUi(self.main_window, root, Information)
         self.ui.auction()
         self.main_window.show()
         self.Dialog.close()

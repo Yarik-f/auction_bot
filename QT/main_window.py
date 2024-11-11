@@ -6,8 +6,11 @@ import ИсторияТоргов, УдалениеТовара, user_admin_wind
 from DataBase.database import db
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, root=True):
-        self.name = 'admin1'
+    #def setupUi(self, MainWindow, root = True, Information = (2, 'admin', 850, 2, 0)):
+    def setupUi(self, MainWindow, root, Information):
+        self.name = Information[1]
+        self.Information = Information
+        #self.name = 'admin'
         self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1350, 930)
@@ -17,7 +20,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(26, 22, 371, 41))
+        self.label.setGeometry(QtCore.QRect(30, 25, 500, 50))
         self.label.setObjectName("label")
         self.radioButton = QtWidgets.QRadioButton(self.centralwidget)
         self.radioButton.setGeometry(QtCore.QRect(600, 150, 150, 40))
@@ -44,7 +47,10 @@ class Ui_MainWindow(object):
         self.pushButton_5.setFont(font)
         self.pushButton_5.setObjectName("pushButton_5")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(1190, 0, 71, 41))
+        self.label_2.setGeometry(QtCore.QRect(1160, 25, 150, 50))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
         self.pushButton_6 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_6.setGeometry(QtCore.QRect(1150, 80, 135, 40))
@@ -58,9 +64,6 @@ class Ui_MainWindow(object):
         font.setPointSize(10)
         self.pushButton_7.setFont(font)
         self.pushButton_7.setObjectName("pushButton_7")
-        self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setGeometry(QtCore.QRect(1190, 50, 71, 21))
-        self.label_3.setObjectName("label_3")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(0, 180, 1350, 750))
         font = QtGui.QFont()
@@ -221,16 +224,14 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow",
-                                      "<html><head/><body><p><span style=\" font-size:14pt;\">Данные администратора</span></p></body></html>"))       
+                                      f"<html><head/><body><p><span style=\" font-size:14pt;\">{self.name}, ставка комиссии {self.Information[3]}%, количество страйков {self.Information[4]}</span></p></body></html>"))    
+        self.label.setWordWrap(True)
+         
         self.pushButton_3.setText(_translate("MainWindow", "Просмотр истории торгов"))
         self.pushButton_4.setText(_translate("MainWindow", "Лоты"))
         self.pushButton_5.setText(_translate("MainWindow", "Пользователи/Админы"))
-        self.label_2.setText(_translate("MainWindow",
-                                        "<html><head/><body><p><span style=\" font-size:14pt;\">Баланс</span></p></body></html>"))
         self.pushButton_6.setText(_translate("MainWindow", "Пополнения баланса"))
         self.pushButton_7.setText(_translate("MainWindow", "Вывести деньги"))
-        self.label_3.setText(_translate("MainWindow",
-                                        "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">100$</span></p></body></html>"))
         self.label_4.setText(_translate("MainWindow",
                                         "<html><head/><body><p align=\"center\"><span style=\" color:#da8f15;\">Товары которые участвуют в аукционе</span></p></body></html>"))
         item = self.tableWidget.horizontalHeaderItem(0)
@@ -331,6 +332,8 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setSortingEnabled(True) # Разрешаем сортировку табли
             self.tableWidget.resizeColumnsToContents()
             self.tableWidget_2.resizeColumnsToContents()
+            self.label_2.setText(f"Баланс {db.newbalance_db(self.Information[0])}")
+            self.label_2.setWordWrap(True)
         else:
             self.auction()
 
@@ -467,6 +470,8 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setItem(k + len(table1), 7, QtWidgets.QTableWidgetItem(str(table1NULL[k][5])))
 
         self.tableWidget_2.setSortingEnabled(True) # Разрешаем сортировку табли
+        self.label_2.setText(f"Баланс {db.newbalance_db(self.Information[0])}")
+        self.label_2.setWordWrap(True)
 
     # Блокируем изменения ячейки
     def EditingBlock(self):
@@ -516,17 +521,30 @@ class Ui_MainWindow(object):
         if u == 8:
             row = self.tableWidget.currentRow() # Номер строки
             if self.tableWidget.currentRow() != -1:
-                te = (self.tableWidget.item(row, 7).text()) # Определяем текст строки 
+                te = self.tableWidget.item(row, 7).text() # Определяем текст строки 
                 if te == self.name:
-                    Dialog = QtWidgets.QDialog()
-                    ui = УдалениеТовара.Ui_Dialog(n, t, u)
-                    ui.setupUi(Dialog)
-                    result = Dialog.exec_()
-                    if result == QtWidgets.QDialog.Accepted:
-                        if self.radioButton.isChecked() == True:
-                            self.myProducts()
+                    if self.tableWidget.item(row, 4).text() != '-':
+                        if float(self.tableWidget.item(row, 3).text()) > float(self.tableWidget.item(row, 4).text()):
+                            loss = float(self.tableWidget.item(row, 3).text()) * 0.05
+                            newBalance = db.adminBalance_db(self.Information[0]) - loss
                         else:
-                            self.auction()
+                            loss = float(self.tableWidget.item(row, 4).text()) * 0.05
+                            newBalance = db.adminBalance_db(self.Information[0]) - loss
+                    else:
+                        loss = float(self.tableWidget.item(row, 3).text()) * 0.05
+                        newBalance = db.adminBalance_db(self.Information[0]) - loss
+                    if newBalance >= 0:
+                        Dialog = QtWidgets.QDialog()
+                        ui = УдалениеТовара.Ui_Dialog(n, t, u, newBalance, self.Information[0])
+                        ui.setupUi(Dialog)
+                        result = Dialog.exec_()
+                        if result == QtWidgets.QDialog.Accepted:
+                            if self.radioButton.isChecked() == True:
+                                self.myProducts()
+                            else:
+                                self.auction()
+                    else:
+                        QMessageBox.warning(self.MainWindow, "Ошибка", "Для отмены заказа недостаточно средств!!!")
                 else:
                     QMessageBox.warning(self.MainWindow, "Ошибка", "Удалять товар с торгов допускается только тот который выставили вы!!!")
         else:

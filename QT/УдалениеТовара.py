@@ -7,10 +7,12 @@ sys.path.append(project_root)
 from DataBase.database import db
 
 class Ui_Dialog(object):
-    def __init__(self, n, t, u): # n - Предупреждения всплывающая в диалоговом окне t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
+    def __init__(self, n, t, u, newBalance = None, id = None): # n - Предупреждения всплывающая в диалоговом окне t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
         self.n = n
         self.t = t[0]
         self.u = u
+        self.newBalance = newBalance
+        self.id = id
 
     def setupUi(self, Dialog):
         self.Dialog = Dialog
@@ -43,5 +45,5 @@ class Ui_Dialog(object):
         #self.textEdit.setCurrentFont(QtGui.QFont())
 
     def OK (self):
-        db.add_delete(self.t, self.u) # n - Предупреждения всплывающая в диалоговом окне t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
+        db.add_delete(self.t, self.u, self.newBalance, self.id) # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки 
         self.Dialog.accept()

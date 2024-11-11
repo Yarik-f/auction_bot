@@ -1,8 +1,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
+import sys
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+sys.path.append(project_root)
+from DataBase.database import db
 import datetime
 
-from main_window import editMW
 from choose_image import Choose_Image
 from DataBase.database import db
 
