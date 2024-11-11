@@ -12,7 +12,7 @@ from telebot import types
 
 # Инициализация бота
 
-bot = telebot.TeleBot('7144969796:AAFbgqLtJrnR0NYZLabca-Kd3gLpB2_bpaE')
+
 channel_id = '@aucton_bot'
 
 # Хранение баланса пользователей
