@@ -426,15 +426,21 @@ class Database:
 
     def adminBalance_db(self, id):
         newbalance = self.con.execute(f"""SELECT balance FROM Admins
-                                    WHERE admin_id == '{id}'  """)  # Узнаем баланс пользователя
+                                            WHERE admin_id == '{id}'  """)  # Узнаем баланс пользователя
         newbalance = newbalance.fetchall()[0][0]
         return newbalance
-
+    
+    # Добавляем баланс 
+    def addBalanceMain(self, newBalance, id):
+        print(newBalance, id)
+        self.con.execute(f"""UPDATE Admins
+                                    SET balance = {newBalance}
+                                    WHERE admin_id = {id} """)
+        
     def add_delete(self, n, u, newBalance, id):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
             with self.con:
-                print(newBalance, id)
                 newBalance = round(newBalance, 2)
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
@@ -569,18 +575,41 @@ class Database:
             return [table]
 
     # Функция для заполнения таблицы история торгов после нажатой кнопки поиск      
-    def search_db(self, textSearch):
+    def salesSearch_db(self, textSearch, combo):
         with self.con:
-            table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
-                                            INNER JOIN Lots 
-                                                ON Bids.lot_id = Lots.lot_id
-                                            INNER JOIN Lot_images
-                                                ON Lots.lot_id = Lot_images.lot_id 
-                                            INNER JOIN Users 
-                                                ON Bids.user_id = Users.user_id
-                                            WHERE description = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
-            table = table.fetchall()
-            return [table]
+            if combo == 'Описание':
+                table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
+                                                INNER JOIN Lots 
+                                                    ON Bids.lot_id = Lots.lot_id
+                                                INNER JOIN Lot_images
+                                                    ON Lots.lot_id = Lot_images.lot_id 
+                                                INNER JOIN Users 
+                                                    ON Bids.user_id = Users.user_id
+                                                WHERE description = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+                table = table.fetchall()
+                return [table]
+            elif combo == 'Номер лота':
+                table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
+                                                INNER JOIN Lots 
+                                                    ON Bids.lot_id = Lots.lot_id
+                                                INNER JOIN Lot_images
+                                                    ON Lots.lot_id = Lot_images.lot_id 
+                                                INNER JOIN Users 
+                                                    ON Bids.user_id = Users.user_id
+                                                WHERE Bids.lot_id = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+                table = table.fetchall()
+                return [table]
+            else:
+                table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
+                                                INNER JOIN Lots 
+                                                    ON Bids.lot_id = Lots.lot_id
+                                                INNER JOIN Lot_images
+                                                    ON Lots.lot_id = Lot_images.lot_id 
+                                                INNER JOIN Users 
+                                                    ON Bids.user_id = Users.user_id
+                                                WHERE username = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+                table = table.fetchall()
+                return [table]
 
     # Функция добавления значений в сам файл SQL
     def add_user_db(self, data):
@@ -603,19 +632,19 @@ class Database:
             self.con.execute(f"""DELETE FROM Admins  
                                      WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
 
-    def edit_User_db(self, p, d):
+    def search_db(self, p, d):
         with self.con:
-            if p[1] == 1:
+            if p[0] == 1:
                 r = self.con.execute(f"""SELECT user_id FROM Users
                                                 WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""")
                 r = r.fetchall()
-
+                print(p)
                 self.con.execute(f"""UPDATE Users
-                                            SET username = '{p[0]}', successful_bids = {p[2]}, auto_bid_access = {p[3]}, is_banned = {p[4]}
+                                            SET successful_bids = {p[1]}, auto_bid_access = {p[2]}, is_banned = {p[3]}
                                             WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
             else:
                 self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
-                              values('{p[0]}', '{p[5]}', {d[2]}, {p[1]}, {5}, {0})""")
+                              values('{d[0]}', '{p[4]}', {d[2]}, {p[0]}, {5}, {0})""")
 
     def edit_Admin_db(self, p, d):
         with self.con:

@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 import sys, os, functools
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
@@ -25,9 +25,9 @@ class Ui_Dialog(object):
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
-        self.pushButton = QtWidgets.QPushButton(self.tab)
-        self.pushButton.setGeometry(QtCore.QRect(10, 630, 93, 31))
-        self.pushButton.setObjectName("pushButton")
+        #self.pushButton = QtWidgets.QPushButton(self.tab)
+        #self.pushButton.setGeometry(QtCore.QRect(10, 630, 93, 31))
+        #self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.tab)
         self.pushButton_2.setGeometry(QtCore.QRect(110, 630, 93, 31))
         self.pushButton_2.setObjectName("pushButton_2")
@@ -59,7 +59,7 @@ class Ui_Dialog(object):
         self.pushButton_8.setObjectName("pushButton_8")
         self.tabWidget.addTab(self.tab_2, "")
 
-        self.pushButton.clicked.connect(functools.partial(self.add, 'add'))
+        #self.pushButton.clicked.connect(functools.partial(self.add, 'add'))
         self.pushButton_2.clicked.connect(self.delete_User)
         self.pushButton_3.clicked.connect(functools.partial(self.edit_user, 'edit'))
 
@@ -78,7 +78,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.pushButton.setText(_translate("Dialog", "Добавить"))
+        #self.pushButton.setText(_translate("Dialog", "Добавить"))
         self.pushButton_2.setText(_translate("Dialog", "Удалить"))
         self.pushButton_3.setText(_translate("Dialog", "Редактировать"))
         self.pushButton_4.setText(_translate("Dialog", "На главную"))
@@ -94,37 +94,43 @@ class Ui_Dialog(object):
 
     def edit_user(self, k):
         row = Ui_Dialog.click_of_table(self)
-        p = []
-        for s in range(self.tableWidget.columnCount()):
-            p.append(self.tableWidget.item(row, s).text()) 
-        Dialog = QtWidgets.QDialog()
-        ui = create_lot_UA.Ui_Dialog(k, p)
-        ui.setupUi(Dialog)
-        result = Dialog.exec_()
-        if result == QtWidgets.QDialog.Rejected:
-            self.fill_user_table()
-            self.fill_admin_table()
+        if row != -1:
+            p = []
+            for s in range(self.tableWidget.columnCount()):
+                p.append(self.tableWidget.item(row, s).text()) 
+            Dialog = QtWidgets.QDialog()
+            ui = create_lot_UA.Ui_Dialog(k, p)
+            ui.setupUi(Dialog)
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Rejected:
+                self.fill_user_table()
+                self.fill_admin_table()
+        else:
+            QMessageBox.warning(self.Dialog, "Ошибка", "Выберете строчку для  редактирования!!!")
 
     def edit_admin(self, k):
         row = Ui_Dialog.click_of_table_A(self)
-        p = []
-        for s in range(self.tableWidget_2.columnCount()):
-            p.append(self.tableWidget_2.item(row, s).text()) 
-        Dialog = QtWidgets.QDialog()
-        ui = create_lot_UA.Ui_Dialog(k, p)
-        ui.setupUi(Dialog)
-        result = Dialog.exec_()
-        if result == QtWidgets.QDialog.Rejected:
-            self.fill_admin_table()
-            self.fill_user_table()
+        if row != -1:
+            p = []
+            for s in range(self.tableWidget_2.columnCount()):
+                p.append(self.tableWidget_2.item(row, s).text()) 
+            Dialog = QtWidgets.QDialog()
+            ui = create_lot_UA.Ui_Dialog(k, p)
+            ui.setupUi(Dialog)
+            result = Dialog.exec_()
+            if result == QtWidgets.QDialog.Rejected:
+                self.fill_admin_table()
+                self.fill_user_table()
+        else:
+            QMessageBox.warning(self.Dialog, "Ошибка", "Выберете строчку для  редактирования!!!")
 
-    def add(self, k):
-        Dialog = QtWidgets.QDialog()
-        ui = create_lot_UA.Ui_Dialog(k, None)
-        ui.setupUi(Dialog)
-        result = Dialog.exec_()
-        if result == QtWidgets.QDialog.Rejected:
-            self.fill_user_table()
+    #def add(self, k):
+        #Dialog = QtWidgets.QDialog()
+        #ui = create_lot_UA.Ui_Dialog(k, None)
+        #ui.setupUi(Dialog)
+        #result = Dialog.exec_()
+        #if result == QtWidgets.QDialog.Rejected:
+            #self.fill_user_table()
 
     def addAdmin(self, k):
         Dialog = QtWidgets.QDialog()
@@ -142,15 +148,21 @@ class Ui_Dialog(object):
 
     def delete_User(self):
         row = Ui_Dialog.click_of_table(self)
-        p = [self.tableWidget.item(row, 0).text(), self.tableWidget.item(row, 2).text(), self.tableWidget.item(row, 3).text()]
-        db.delete_User_db(p)
-        Ui_Dialog.fill_user_table(self)
+        if row != -1:
+            p = [self.tableWidget.item(row, 0).text(), self.tableWidget.item(row, 2).text(), self.tableWidget.item(row, 3).text()]
+            db.delete_User_db(p)
+            Ui_Dialog.fill_user_table(self)
+        else:
+            QMessageBox.warning(self.Dialog, "Ошибка", "Выберете строчку для удаления!!!")
 
     def delete_Admin(self):
         row = Ui_Dialog.click_of_table_A(self)
-        p = [self.tableWidget_2.item(row, 0).text(), self.tableWidget_2.item(row, 1).text(), self.tableWidget_2.item(row, 3).text()]
-        db.delete_Admin_db(p)
-        Ui_Dialog.fill_admin_table(self)
+        if row != -1:
+            p = [self.tableWidget_2.item(row, 0).text(), self.tableWidget_2.item(row, 1).text(), self.tableWidget_2.item(row, 3).text()]
+            db.delete_Admin_db(p)
+            Ui_Dialog.fill_admin_table(self)
+        else:
+            QMessageBox.warning(self.Dialog, "Ошибка", "Выберете строчку для удаления!!!")
         
     def fill_user_table(self):
         users = db.get_user_data()

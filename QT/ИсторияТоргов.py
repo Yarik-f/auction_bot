@@ -12,6 +12,12 @@ class Ui_Dialog(object):
         self.Dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(850, 900)
+        self.combo_box = QtWidgets.QComboBox(Dialog)
+        self.combo_box.setGeometry(QtCore.QRect(460, 820, 100, 30))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.combo_box.setFont(font)
+        self.combo_box.addItems(['Описание', 'Номер лота', 'Покупатель'])
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setGeometry(QtCore.QRect(210, 0, 351, 41))
         self.label.setObjectName("label")
@@ -48,7 +54,7 @@ class Ui_Dialog(object):
         self.pushButton_2.setFont(font)
         self.pushButton_2.setObjectName("pushButton_2")
         self.lineEdit = QtWidgets.QLineEdit(Dialog)
-        self.lineEdit.setGeometry(QtCore.QRect(70, 820, 400, 30))
+        self.lineEdit.setGeometry(QtCore.QRect(70, 820, 380, 30))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.lineEdit.setFont(font)
@@ -108,8 +114,9 @@ class Ui_Dialog(object):
         it.setFlags(it.flags() & ~QtCore.Qt.ItemIsEditable)
 
     def search(self): 
+        combo = self.combo_box.currentText()
         textSearch = self.lineEdit.displayText()
-        historyPage = db.search_db(textSearch)[0]
+        historyPage = db.salesSearch_db(textSearch, combo)[0]
         if len(historyPage) > 0:
             self.tableWidget.setRowCount(len(historyPage))  # Создаем строки в таблице
             # Заполняем сталбцы с окончанием торгов и стартовую цену лота
