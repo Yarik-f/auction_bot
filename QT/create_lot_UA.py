@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 import random, string
 
 from DataBase.database import db
@@ -53,7 +53,6 @@ class Ui_Dialog(object):
             self.combo_box_2.addItems(['0', '1'])
             self.tableWidget.setCellWidget(0, 3, self.combo_box)
             self.tableWidget.setCellWidget(0, 4, self.combo_box_2)
-
             self.pushButton_2.clicked.connect(self.plus)
             self.pushButton_3.clicked.connect(self.minus)
 
@@ -87,13 +86,11 @@ class Ui_Dialog(object):
             self.combo_box = QtWidgets.QComboBox(Dialog)
             self.combo_box.addItems(['2', '3'])
             self.tableWidget.setCellWidget(0, 3, self.combo_box)
-            
-
             self.pushButton_2.clicked.connect(self.plus)
             self.pushButton_3.clicked.connect(self.minus)
 
         elif self.k == 'edit':
-            self.tableWidget.setColumnCount(5)
+            self.tableWidget.setColumnCount(4)
             self.tableWidget.setRowCount(1)
             item = QtWidgets.QTableWidgetItem()
             self.tableWidget.setHorizontalHeaderItem(0, item)
@@ -103,8 +100,6 @@ class Ui_Dialog(object):
             self.tableWidget.setHorizontalHeaderItem(2, item)
             item = QtWidgets.QTableWidgetItem()
             self.tableWidget.setHorizontalHeaderItem(3, item)
-            item = QtWidgets.QTableWidgetItem()
-            self.tableWidget.setHorizontalHeaderItem(4, item)
             self.combo_box = QtWidgets.QComboBox(Dialog)
             self.combo_box.addItems(['0', '1'])
             self.combo_box_2 = QtWidgets.QComboBox(Dialog)
@@ -112,8 +107,8 @@ class Ui_Dialog(object):
             self.combo_box_3 = QtWidgets.QComboBox(Dialog)
             self.combo_box_3.addItems(['user', 'admin'])
             self.tableWidget.setCellWidget(0, 3, self.combo_box)
-            self.tableWidget.setCellWidget(0, 4, self.combo_box_2)
-            self.tableWidget.setCellWidget(0, 1, self.combo_box_3)
+            self.tableWidget.setCellWidget(0, 2, self.combo_box_2)
+            self.tableWidget.setCellWidget(0, 0, self.combo_box_3)
 
         elif self.k == 'editAdmin':
             self.tableWidget.setColumnCount(5)
@@ -136,7 +131,6 @@ class Ui_Dialog(object):
         
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -174,21 +168,20 @@ class Ui_Dialog(object):
 
         elif self.k == 'edit':
             item = self.tableWidget.horizontalHeaderItem(0)
-            item.setText(_translate("MainWindow", "Телеграм пользователя"))
-            item = self.tableWidget.horizontalHeaderItem(1)
             item.setText(_translate("MainWindow", "роль"))
-            item = self.tableWidget.horizontalHeaderItem(2)
+            item = self.tableWidget.horizontalHeaderItem(1)
             item.setText(_translate("MainWindow", "Кол.успеш.ставок"))
-            item = self.tableWidget.horizontalHeaderItem(3)
+            item = self.tableWidget.horizontalHeaderItem(2)
             item.setText(_translate("MainWindow", "Авто ставка"))
-            item = self.tableWidget.horizontalHeaderItem(4)
+            item = self.tableWidget.horizontalHeaderItem(3)
             item.setText(_translate("MainWindow", "Бан"))
-            for s in range(len(self.p)-1):
-                if s < 2:
-                    self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s]))
-                else:
-                    self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s+1]))
-
+            #for s in range(len(self.p)-1):
+                #if s < 1:
+                    #self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s]))
+                #else:
+                    #self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s+1]))
+            self.tableWidget.setItem(0, 1, QTableWidgetItem(self.p[3]))
+            
         elif self.k == 'editAdmin':
             item = self.tableWidget.horizontalHeaderItem(0)
             item.setText(_translate("MainWindow", "Телеграм админа"))
@@ -205,8 +198,6 @@ class Ui_Dialog(object):
                     self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s]))
                 else:
                     self.tableWidget.setItem(0, s, QTableWidgetItem(self.p[s+1]))
-
-
         self.tableWidget.resizeColumnsToContents()
 
     def plus(self):
@@ -229,13 +220,11 @@ class Ui_Dialog(object):
             globals()['self.combo_box_%s' % rowPosition].addItems(['2', '3'])
             self.tableWidget.setCellWidget(self.tableWidget.rowCount()-1, 3, globals()['self.combo_box_%s' % rowPosition] )
             
-
     def minus(self):
         if self.tableWidget.currentRow() > 0:        
             row = self.tableWidget.currentRow() # Отслеживаем строчку нажатой ячейки 
             self.tableWidget.removeRow(row) # Удаляем строчку и все элементы выбраной ячейки
         
-
     def save(self):
         if self.k == 'add': 
             for s in range(self.tableWidget.rowCount()):
@@ -262,32 +251,42 @@ class Ui_Dialog(object):
                             try:
                                 pe.append(globals()['self.combo_box_%s' % s].currentText())
                             except RuntimeError:
-                                None
+                                None # Нужно придумать проверку для удаления строки посередине создания новых администраторов 
+                    elif s1 == 2 or s1 == 4 or s1 == 5:
+                        try:
+                            n = int(self.tableWidget.item(s, s1).text())
+                            pe.append(n) # Добовляем информацию данной ячейкм в список
+                        except ValueError:
+                            return QMessageBox.warning(self.Dialog, "Запрет к редактированию!!!", "Нужно ввести число")
                     else:
                         pe.append(self.tableWidget.item(s, s1).text()) # Добовляем информацию данной ячейкм в список 
                 db.add_user_A_db(pe) 
                 
-
         elif self.k == 'edit':
             pe = [] # Добавляем в список информацию о редакции ячейки  
             print(self.tableWidget.columnCount())
             for s1 in range(self.tableWidget.columnCount()): # 
-                if s1 == 1:
+                if s1 == 0:
                     if self.combo_box_3.currentText() == 'user':
                         pe.append(1)
                     else:
                         pe.append(2)
+                elif s1 == 2:
+                    pe.append(self.combo_box_2.currentText())
                 elif s1 == 3:
                     pe.append(self.combo_box.currentText())
-                elif s1 == 4:
-                    pe.append(self.combo_box_2.currentText())
                 else:
-                    pe.append(self.tableWidget.item(0, s1).text()) # Добовляем информацию данной ячейкм в список 
+                    try:
+                        n = int(self.tableWidget.item(0, s1).text())
+                        pe.append(n) # Добовляем информацию данной ячейкм в список 
+                    except ValueError:
+                        return QMessageBox.warning(self.Dialog, "Запрет к редактированию!!!", "Нужно ввести число")
             if self.combo_box_3.currentText() != 'user':  
                 l = string.ascii_letters + string.digits
                 r = random.choices(l, k = 8)
                 lr = "".join(r)
                 pe.append(lr)
+            print(pe)
             db.edit_User_db(pe, self.p)
 
         elif self.k == 'editAdmin':
@@ -298,14 +297,18 @@ class Ui_Dialog(object):
                         pe.append(2)
                     else:
                         pe.append(3)
+                elif s1 == 3 or s1 == 4:
+                    try:
+                        n = int(self.tableWidget.item(0, s1).text())
+                        pe.append(n) # Добовляем информацию данной ячейкм в список
+                    except ValueError:
+                        return QMessageBox.warning(self.Dialog, "Запрет к редактированию!!!", "Нужно ввести число")
                 else:
                     pe.append(self.tableWidget.item(0, s1).text()) # Добовляем информацию данной ячейкм в список 
             db.edit_Admin_db(pe, self.p)
-           
 
         self.Dialog.close()
-        
-    
+         
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

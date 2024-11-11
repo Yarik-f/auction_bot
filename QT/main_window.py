@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 import functools, datetime
 
-import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window, editMW
+import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window, editMW, addingAndRemovingBalance
 from DataBase.database import db
 
 class Ui_MainWindow(object):
@@ -205,6 +205,8 @@ class Ui_MainWindow(object):
         self.pushButton_4.clicked.connect(functools.partial(self.products_window))
         self.pushButton_5.setVisible(root)
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
+        self.pushButton_6.clicked.connect(self.topUpBalance)
+        self.pushButton_7.clicked.connect(self.withdrawMoney)
         self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 
                                                             'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )',
                                                             self.r, 8))
@@ -336,7 +338,6 @@ class Ui_MainWindow(object):
             self.label_2.setWordWrap(True)
         else:
             self.auction()
-
 
     #Отслеживаем нажатые ячейки 
     def click_of_table(self, n):
@@ -510,6 +511,29 @@ class Ui_MainWindow(object):
         ui = products_window.Ui_Dialog()
         ui.setupUi(Dialog)
         ui.fill_lot_table()
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            if self.radioButton.isChecked() == True:
+                self.myProducts()
+            else:
+                self.auction()
+    
+    # Пополнения счета администратора через главную страницу
+    def topUpBalance(self):
+        Dialog = QtWidgets.QDialog()
+        ui = addingAndRemovingBalance.Ui_Dialog(self.Information[0], 'plus')
+        ui.setupUi(Dialog)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            if self.radioButton.isChecked() == True:
+                self.myProducts()
+            else:
+                self.auction()
+
+    def withdrawMoney(self):
+        Dialog = QtWidgets.QDialog()
+        ui = addingAndRemovingBalance.Ui_Dialog(self.Information[0], 'minus')
+        ui.setupUi(Dialog)
         result = Dialog.exec_()
         if result == QtWidgets.QDialog.Accepted:
             if self.radioButton.isChecked() == True:
