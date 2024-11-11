@@ -6,8 +6,8 @@ import ИсторияТоргов, УдалениеТовара, user_admin_wind
 from DataBase.database import db
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, root = True, Information = (2, 'admin', 850, 2, 0)):
-    #def setupUi(self, MainWindow, root, Information):
+    #def setupUi(self, MainWindow, root = True, Information = (2, 'admin', 850, 2, 0)):
+    def setupUi(self, MainWindow, root, Information):
         self.name = Information[1]
         self.Information = Information
         #self.name = 'admin'
