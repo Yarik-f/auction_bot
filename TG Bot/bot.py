@@ -18,6 +18,7 @@ channel_id = '@aucton_bot'
 # Хранение баланса пользователей
 user_balances = {}
 
+bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
 
 def create_lot_button(lot_id): #Кнопки в канале
     keyboard = types.InlineKeyboardMarkup()
@@ -305,7 +306,9 @@ def start_command(message):
 
             button = types.ReplyKeyboardMarkup(resize_keyboard=True)
             button.add(types.KeyboardButton('Баланс'), types.KeyboardButton('Пополнить баланс'),
-                       types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'))
+                       types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'),
+                       types.KeyboardButton('Мои лоты'), types.KeyboardButton('Назад'))
+
 
             name = message.from_user.first_name
             bot.send_message(message.chat.id,
@@ -322,13 +325,16 @@ def start_command(message):
         else:
             bot.send_message(message.chat.id, f'Привет, нет данных {check}')
 
+
 @bot.message_handler(func=lambda message: message.text == 'Войти как пользователь')
 def user(message):
     button = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button.add(types.KeyboardButton('Баланс'), types.KeyboardButton('Пополнить баланс'),
-               types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'), types.KeyboardButton('Назад'))
+               types.KeyboardButton('Авто-ставка'), types.KeyboardButton('Правила и помощь'),
+               types.KeyboardButton('Мои лоты'), types.KeyboardButton('Назад'))
 
-    bot.send_message(message.chat.id, f'Чтобы принять участие в аукционах\nПереходи по ссылке в канал https://t.me/+qaZa5fdmZyU2NGNi:',
+    bot.send_message(message.chat.id,
+                     f'Чтобы принять участие в аукционах\nПереходи по ссылке в канал https://t.me/+qaZa5fdmZyU2NGNi:',
                      reply_markup=button)
 @bot.message_handler(func=lambda message: message.text == 'Войти как админ')
 def admin(message):
@@ -373,6 +379,50 @@ def deposit_balance(message):
             bot.send_message(message.chat.id, 'Пожалуйста, введите положительное число для пополнения баланса.')
     except ValueError:
         bot.send_message(message.chat.id, 'Ошибка: введите числовое значение для пополнения баланса.')
+
+@bot.message_handler(func=lambda message: message.text == 'Мои лоты')
+def show_my_lots(message):
+    username = message.from_user.username or str(message.from_user.id)  # Получаем имя пользователя или ID
+    user_id = db.get_user_id(username)  # Получаем ID пользователя из базы данных
+    lots = db.get_user_lots(user_id)  # Получаем все лоты, на которые пользователь сделал ставки
+
+    if not lots:
+        bot.send_message(message.chat.id, "Вы еще не сделали ставки на лоты.")
+    else:
+        # Отправка списка лотов
+        for lot in lots:
+            lot_id, title, description = lot
+            message_text = f"Лот: {title}\nОписание: {description}\n"
+            keyboard = types.InlineKeyboardMarkup()
+            button = types.InlineKeyboardButton(f"Посмотреть лот {lot_id}", callback_data=f"lot_{lot_id}")
+            keyboard.add(button)
+            bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
+
+# Функция для получения лотов, на которые пользователь сделал ставки
+def get_user_lots(user_id):
+    #SQL-запрос, который извлекает лоты, на которые этот пользователь сделал ставки
+    query = """
+    SELECT lot_id, title, description
+    FROM bids
+    JOIN lots ON bids.lot_id = lots.id
+    WHERE bids.user_id = %s
+    """
+    return db.execute(query, (user_id,))
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("lot_"))
+def view_lot(call):
+    lot_id = call.data.split("lot_")[1]  # Извлекаем ID лота
+    lot_data = db.get_lot_data_by_id(lot_id)  # Получаем данные о лоте из базы данных
+
+    if lot_data:
+        # Отправка информации о лоте пользователю
+        for lot in lot_data:
+            lot_id, starting_price, start_time, title, description, location, image_path = lot
+            message_text = (f"Лот: {title}\nОписание: {description}\nМестоположение: {location}\n"
+                            f"Следующая ставка: {starting_price}\nТекущая ставка: --")
+            bot.send_photo(call.message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
+    else:
+        bot.send_message(call.message.chat.id, "Лот не найден.")
 
 
 if __name__ == '__main__':
