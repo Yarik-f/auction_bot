@@ -407,15 +407,22 @@ class Database:
             query = "SELECT MAX(bid_amount) FROM Bids WHERE lot_id = ?"
             data = self.con.execute(query, (lot_id,)).fetchone()
             return data[0] if data else None
+        
+    def my_get_bid_lot(self, lot_id, user_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT MAX(bid_amount) FROM Bids WHERE lot_id = ? and user_id = ?"
+            data = self.con.execute(query, (lot_id, user_id)).fetchone()
+            return data[0] if data else None
+        
     def add_bid(self, lot_id, user_id, amount, bid_time):
         with sql.connect(db_path) as self.con:
             sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount, bid_time) values(?, ?, ?, ?)"
             self.con.execute(sql_insert_bids, [lot_id, user_id, amount, bid_time])
             self.con.commit()
-    def get_bid_user(self, user_id):
+    def get_bid_user(self, user_id, lot_id):
         with sql.connect(db_path) as self.con:
-            query = "SELECT bid_id FROM Bids WHERE user_id = ?"
-            data = self.con.execute(query, (user_id,)).fetchone()
+            query = "SELECT bid_id FROM Bids WHERE user_id = ? and lot_id = ?"
+            data = self.con.execute(query, (user_id, lot_id)).fetchone()
             return data[0] if data else None
     def update_bid_user(self, bid_amount, bid_time, user_id, lot_id):
         with sql.connect(db_path) as self.con:

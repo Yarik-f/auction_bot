@@ -98,8 +98,9 @@ def process_bid(call): # Обработка Ставок
     print(f'dsds {message_bot_id}')
     if message_id:
         bid = db.get_bid_lot(lot_id)
+        myBid = db.my_get_bid_lot(lot_id, user_id)
         print(bid)
-        if bid is None:
+        if myBid is None:
             for lot in lot_data:
                 lot_id, starting_price, start_time, title, description, location, image_path = lot
                 db.add_bid(lot_id, user_id, starting_price, bid_time)
@@ -113,7 +114,7 @@ def process_bid(call): # Обработка Ставок
                 bot.edit_message_caption(chat_id=call.message.chat.id, message_id=message_bot_id,
                                          caption=message_text, reply_markup=bot_lot_button(lot_id))
         else:
-            yes_bid = db.get_bid_user(user_id)
+            yes_bid = db.get_bid_user(user_id, lot_id)
             print(yes_bid)
             if yes_bid:
                 for lot in lot_data:
