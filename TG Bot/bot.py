@@ -12,13 +12,11 @@ from telebot import types
 
 # Инициализация бота
 
-
+bot = telebot.TeleBot('7144969796:AAFbgqLtJrnR0NYZLabca-Kd3gLpB2_bpaE')
 channel_id = '@aucton_bot'
 
 # Хранение баланса пользователей
 user_balances = {}
-
-bot = telebot.TeleBot('7653723379:AAFFS0_0T7MbH5P_ubAvAcJneUKYz-HJJB0')
 
 def create_lot_button(lot_id): #Кнопки в канале
     keyboard = types.InlineKeyboardMarkup()
@@ -69,6 +67,25 @@ def send_lot_at_time(lot_data): # Отправка картинки с пере�
     else:
         print("Ошибка: Неверный путь к изображению")
 
+# def update_bid(call):
+#     lot_id = call.data.split("bid_")[1]
+#     bid_time = datetime.now()
+#     bid_time = bid_time.strftime('%Y-%m-%d %H:%M')
+#     username = call.from_user.username
+#     user_id = db.get_user_id(username)
+#     auto_bid = db.get_auto_bid(lot_id, user_id)
+#     max_bid = db.get_bid_lot(lot_id)
+#     if auto_bid:
+#         if auto_bid[0][0] > max_bid:
+#             if auto_bid[0][1] < max_bid:
+#                 bid = max_bid + 25
+#                 db.update_bid_user(bid, bid_time, user_id, lot_id)
+#                 db.update_auto_bid(bid, user_id, lot_id)
+#         else:
+#             bot.send_message(chat_id=call.message.chat.id, text="Вашу ставку перебили")
+#     else:
+#         print('ccccccc')
+
 def process_bid(call): # Обработка Ставок
     lot_id = call.data.split("bid_")[1]
     bid_time = datetime.now()
@@ -102,7 +119,7 @@ def process_bid(call): # Обработка Ставок
                 for lot in lot_data:
                     lot_id, starting_price, start_time, title, description, location, image_path = lot
                     bid = bid + 25
-                    db.update_bid_user(bid, bid_time, user_id)
+                    db.update_bid_user(bid, bid_time, user_id, lot_id)
                     message_text = (
                         f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
                         f': {bid + 25}\nТекущая ставка: {bid}')
@@ -169,10 +186,9 @@ def process_auto_bid(call): #Добавление автоставки, толь
                 for lot in lot_data:
                     lot_id, starting_price, start_time, title, description, location, image_path = lot
                     print(lot_id, user_id, max_bid, starting_price)
-                    bid = db.get_bid_lot(lot_id)
-                    bid = bid + 25
+                    bid = current_bid + 25
+                    db.update_bid_user(bid, bid_time, user_id, lot_id)
                     db.add_auto_bid(lot_id, user_id, max_bid, bid)
-                    db.update_bid_user(bid, bid_time, user_id)
 
                     message_text = (
                         f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
@@ -187,10 +203,10 @@ def process_auto_bid(call): #Добавление автоставки, толь
                 for lot in lot_data:
                     lot_id, starting_price, start_time, title, description, location, image_path = lot
                     print(lot_id, user_id, max_bid, starting_price)
-                    bid = db.get_bid_lot(lot_id)
-                    bid = bid + 25
+                    bid = current_bid + 25
+                    db.add_bid(lot_id, user_id, bid, bid_time)
                     db.add_auto_bid(lot_id, user_id, max_bid, bid)
-                    db.add_bid(lot_id,user_id,bid,bid_time)
+
 
                     message_text = (
                         f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
@@ -204,6 +220,7 @@ def process_auto_bid(call): #Добавление автоставки, толь
 def callback_handler(call):
     if call.data.startswith("bid_"):
         threading.Thread(target=process_bid, args=(call,)).start()
+        # threading.Thread(target=update_bid, args=(call,)).start()
     elif call.data.startswith("time_"):
         lot_id = call.data.split("time_")[1]
 
@@ -398,17 +415,6 @@ def show_my_lots(message):
             keyboard.add(button)
             bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
 
-# Функция для получения лотов, на которые пользователь сделал ставки
-def get_user_lots(user_id):
-    #SQL-запрос, который извлекает лоты, на которые этот пользователь сделал ставки
-    query = """
-    SELECT lot_id, title, description
-    FROM bids
-    JOIN lots ON bids.lot_id = lots.id
-    WHERE bids.user_id = %s
-    """
-    return db.execute(query, (user_id,))
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith("lot_"))
 def view_lot(call):
     lot_id = call.data.split("lot_")[1]  # Извлекаем ID лота
@@ -420,7 +426,7 @@ def view_lot(call):
             lot_id, starting_price, start_time, title, description, location, image_path = lot
             message_text = (f"Лот: {title}\nОписание: {description}\nМестоположение: {location}\n"
                             f"Следующая ставка: {starting_price}\nТекущая ставка: --")
-            bot.send_photo(call.message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
+            bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
     else:
         bot.send_message(call.message.chat.id, "Лот не найден.")
 

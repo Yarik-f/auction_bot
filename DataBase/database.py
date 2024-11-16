@@ -244,7 +244,7 @@ class Database:
                     l.start_time, l.end_time, l.document_type, i.image_pt, l.status
             FROM Lots l
             JOIN Admins a ON l.seller_id = a.admin_id
-            Join Lot_images i ON l.lot_id = i.lot_id
+            JOIN Lot_images i ON l.lot_id = i.lot_id
         ''')
         data = data.fetchall()
         return data
@@ -368,6 +368,16 @@ class Database:
             """
             data = self.con.execute(query, (lot_id,)).fetchall()
             return data
+    def get_user_lots(self, user_id):
+        with sql.connect(db_path) as self.con:
+            query = """
+            SELECT l.lot_id, l.title, l.description
+            FROM Bids b
+            JOIN Lots l ON b.lot_id = l.lot_id
+            WHERE b.user_id = ?
+            """
+            data = self.con.execute(query, (user_id,)).fetchall()
+            return data
 
     def get_end_time(self, lot_id):
         with sql.connect(db_path) as self.con:
@@ -407,21 +417,26 @@ class Database:
             query = "SELECT bid_id FROM Bids WHERE user_id = ?"
             data = self.con.execute(query, (user_id,)).fetchone()
             return data[0] if data else None
-    def update_bid_user(self, bid_amount, bid_time, user_id):
+    def update_bid_user(self, bid_amount, bid_time, user_id, lot_id):
         with sql.connect(db_path) as self.con:
-            query = "UPDATE Bids SET bid_amount = ?, bid_time = ? WHERE user_id = ?"
-            self.con.execute(query, (bid_amount, bid_time, user_id))
+            query = "UPDATE Bids SET bid_amount = ?, bid_time = ? WHERE user_id = ? AND lot_id = ?"
+            self.con.execute(query, (bid_amount, bid_time, user_id, lot_id))
             self.con.commit()
 
     def get_auto_bid(self, lot_id, user_id):
         with sql.connect(db_path) as self.con:
-            query = "SELECT max_bid FROM Auto_bids WHERE lot_id = ? AND user_id = ?"
-            data = self.con.execute(query, (lot_id, user_id)).fetchone()
-            return data[0] if data else None
+            query = "SELECT max_bid, current_bid FROM Auto_bids WHERE lot_id = ? AND user_id = ?"
+            data = self.con.execute(query, (lot_id, user_id)).fetchall()
+            return data if data else None
     def add_auto_bid(self, lot_id, user_id, max_bid, current_bid):
         with sql.connect(db_path) as self.con:
             sql_insert_auto_bids = "INSERT INTO Auto_bids (lot_id, user_id, max_bid, current_bid) values(?, ?, ?, ?)"
             self.con.execute(sql_insert_auto_bids,[lot_id, user_id, max_bid, current_bid])
+            self.con.commit()
+    def update_auto_bid(self, current_bid, user_id, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "UPDATE Auto_bids SET current_bid = ? WHERE user_id = ? AND lot_id = ?"
+            self.con.execute(query, (current_bid, user_id, lot_id))
             self.con.commit()
 
     def addBalance(self, u, amount):
