@@ -9,6 +9,7 @@ from DataBase.database import db
 
 import telebot
 from telebot import types
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Инициализация бота
 
@@ -235,6 +236,30 @@ def callback_handler(call):
     elif call.data == 'no':
         bot.send_message(call.message.chat.id, "Вы отменили установку авто ставки.")
 
+    elif call.data.startswith("lot_"):
+        lot_id = call.data.split("lot_")[1] 
+        lot_data = db.get_lot_data_by_id(lot_id) 
+        if lot_data:
+            for lot in lot_data:
+                lot_id, starting_price, start_time, title, description, location, image_path = lot
+                bid = db.get_bid_lot(lot_id)
+                if bid:
+                    message_text = (
+                        f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                        f': {bid + 25}\nТекущая ставка: {bid}')
+                    bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
+                else:
+                    message_text = (f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                                        f': {starting_price}\nТекущая ставка: --')
+                    bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
+        username = call.from_user.username
+        user_id = db.get_user_id(username)
+        bid = db.get_bid_lot(lot_id)
+        my_bid = db.my_get_bid_lot(lot_id, user_id)
+        bot.send_message(call.message.chat.id, f'Вы выбрали лот №{lot_id}\n'
+                                                f'Ваша ставка {my_bid}\n'
+                                                f'Победная ставка {bid + 25}')
+
 def set_max_bid(message, lot_id):
     max_bid = int(message.text)
 
@@ -387,29 +412,14 @@ def show_my_lots(message):
         bot.send_message(message.chat.id, "Вы еще не сделали ставки на лоты.")
     else:
         # Отправка списка лотов
-        for lot in lots:
-            lot_id, title, description = lot
-            message_text = f"Лот: {title}\nОписание: {description}\n"
-            keyboard = types.InlineKeyboardMarkup()
-            button = types.InlineKeyboardButton(f"Посмотреть лот {lot_id}", callback_data=f"lot_{lot_id}")
-            keyboard.add(button)
-            bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith("lot_"))
-def view_lot(call):
-    lot_id = call.data.split("lot_")[1]  # Извлекаем ID лота
-    lot_data = db.get_lot_data_by_id(lot_id)  # Получаем данные о лоте из базы данных
-
-    if lot_data:
-        # Отправка информации о лоте пользователю
-        for lot in lot_data:
-            lot_id, starting_price, start_time, title, description, location, image_path = lot
-            message_text = (f"Лот: {title}\nОписание: {description}\nМестоположение: {location}\n"
-                            f"Следующая ставка: {starting_price}\nТекущая ставка: --")
-            bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
-    else:
-        bot.send_message(call.message.chat.id, "Лот не найден.")
-
+        myLots = InlineKeyboardMarkup() # Создаем переменную с кнопками 
+        Lots = [] # Список для всех возможных кнопок 
+        # Заполняем список всевозможными кнопками
+        for s in lots:
+            Buttons = InlineKeyboardButton(f'Лот №{s[0]} Наименование {s[1]}', callback_data=f"lot_{s[0]}" ) # Создаём кнопку определённого лота в котором мы участвуем    
+            Lots.append(Buttons) # Добавляем кнопки в наш список  
+        myLots.add(*Lots) # Заполняем нашу переменную всеми кнопками из списка       
+        bot.send_message(message.chat.id,"Выбирайте 🥰",reply_markup=myLots) # Отображаем все кнопки в телеграмме    
 
 if __name__ == '__main__':
     print("Бот запущен...")

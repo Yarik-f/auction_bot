@@ -369,13 +369,15 @@ class Database:
             """
             data = self.con.execute(query, (lot_id,)).fetchall()
             return data
+        
     def get_user_lots(self, user_id):
         with sql.connect(db_path) as self.con:
             query = """
-            SELECT l.lot_id, l.title, l.description
-            FROM Bids b
-            JOIN Lots l ON b.lot_id = l.lot_id
-            WHERE b.user_id = ?
+            SELECT l.lot_id, l.title
+                FROM Bids b
+                JOIN Lots l 
+                    ON b.lot_id = l.lot_id
+                WHERE b.user_id = ?
             """
             data = self.con.execute(query, (user_id,)).fetchall()
             return data
@@ -758,6 +760,23 @@ class Database:
         Information = Information.fetchall()
         return Information[0]
     
+
+
+    
+
+
+
+    
+    def add_auto_bids(self):
+        with self.con:
+            self.con.execute(f"""INSERT INTO Auto_bids (lot_id, user_id, max_bid, current_bid)
+                              values(9, 1, 20000, 400)""")  # Происходит дабовления строки в SQL Таблицу
+            
+    def delete_qqqqqqq(self):
+        with self.con:
+            self.con.execute(f"""DELETE FROM Auto_bids  
+                                     """)
+    
 db = Database()
 
 data_db = {
@@ -852,7 +871,12 @@ data_db = {
     ]
 }
 
+
+
 # db.clear_data()
 # db.delete_table()
 # db.create_table()
 # db.fill_table(data_db)
+
+#db.add_auto_bids()
+#db.delete_qqqqqqq()
