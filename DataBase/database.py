@@ -496,7 +496,6 @@ class Database:
     
     # Добавляем баланс 
     def addBalanceMain(self, newBalance, id):
-        print(newBalance, id)
         self.con.execute(f"""UPDATE Admins
                                     SET balance = {newBalance}
                                     WHERE admin_id = {id} """)
@@ -696,19 +695,18 @@ class Database:
             self.con.execute(f"""DELETE FROM Admins  
                                      WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
 
-    def search_db(self, p, d):
+    def search_db(self, pe, p):
         with self.con:
-            if p[0] == 1:
+            if pe[0] == 1:
                 r = self.con.execute(f"""SELECT user_id FROM Users
-                                                WHERE username = '{d[0]}' and balance = {d[2]} and successful_bids = {d[3]}""")
+                                                WHERE username = '{p[0]}' and balance = {p[2]} and successful_bids = {p[3]}""")
                 r = r.fetchall()
-                print(p)
                 self.con.execute(f"""UPDATE Users
-                                            SET successful_bids = {p[1]}, auto_bid_access = {p[2]}, is_banned = {p[3]}
+                                            SET successful_bids = {pe[1]}, auto_bid_access = {pe[2]}, is_banned = {pe[3]}
                                             WHERE user_id = {r[0][0]}""")  # Редактируем данные ячейки
             else:
                 self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
-                              values('{d[0]}', '{p[4]}', {d[2]}, {p[0]}, {5}, {0})""")
+                              values('{p[0]}', '{pe[4]}', {p[2]}, {pe[0]}, {5}, {0})""")
 
     def edit_Admin_db(self, p, d):
         with self.con:
@@ -758,7 +756,6 @@ class Database:
         Information = self.con.execute(f"""SELECT admin_id, username, balance, commission_rate, penalties FROM Admins
                                                 WHERE username = '{username}' """)
         Information = Information.fetchall()
-        print(Information[0])
         return Information[0]
     
 db = Database()

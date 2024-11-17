@@ -9,7 +9,6 @@ from DataBase.database import db
 import datetime
 
 from choose_image import Choose_Image
-from DataBase.database import db
 
 class Ui_Dialog(object):
     def __init__(self, k, p): 

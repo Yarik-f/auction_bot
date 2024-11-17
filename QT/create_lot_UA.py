@@ -287,7 +287,7 @@ class Ui_Dialog(object):
                 lr = "".join(r)
                 pe.append(lr)
             print(pe)
-            db.edit_User_db(pe, self.p)
+            db.search_db(pe, self.p)
 
         elif self.k == 'editAdmin':
             pe = [] # Добавляем в список информацию о редакции ячейки  
