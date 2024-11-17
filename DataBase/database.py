@@ -879,4 +879,4 @@ data_db = {
 # db.fill_table(data_db)
 
 #db.add_auto_bids()
-#db.delete_qqqqqqq()
+# db.delete_qqqqqqq()
