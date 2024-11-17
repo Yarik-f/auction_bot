@@ -86,6 +86,14 @@ def send_lot_at_time(lot_data): # Отправка картинки с пере�
 #     else:
 #         print('ccccccc')
 
+def get_members(user_id, lot_id):
+    bot.send_message(user_id, f'Ваша автоставка на лот {lot_id} оказалась меньше чем предложил другой пользователь')
+
+def delete_auto_bid(lot_id):
+    user_tg_id = db.get_user_tg_id_by_auto_bid(lot_id)
+    db.delete_auto_bid(lot_id)
+    get_members(user_tg_id, lot_id)
+
 def process_bid(call): # Обработка Ставок
     lot_id = call.data.split("bid_")[1]
     bid_time = datetime.now()
@@ -133,29 +141,56 @@ def process_auto_bid(call): #Добавление автоставки, толь
     user_id = db.get_user_id(username)
     lot_data = db.get_lot_data_by_id(lot_id)
     message_id = db.get_message_id(lot_id)
+    bid = db.get_bid_lot(lot_id)
+    my_bid = db.my_get_bid_lot(lot_id, user_id)
+    auto_bid = db.get_max_bid_auto_bid(lot_id)
     if message_id:
-        bid = db.get_bid_lot(lot_id)
-        my_bid = db.my_get_bid_lot(lot_id, user_id)
         for lot in lot_data:
             lot_id, starting_price, start_time, title, description, location, image_path = lot
             if my_bid is None:
-                if bid is None:
-                    db.add_auto_bid(lot_id, user_id, max_bid, starting_price)
-                    db.add_bid(lot_id, user_id, starting_price, bid_time)
-                    bid = db.get_bid_lot(lot_id)
+                if int(max_bid) < starting_price:
+                    bot.send_message(call.message.chat.id,
+                                     f"Вы не иожете установить авто ставку для лота {lot_id}.\nТак как минимальная автоставка {starting_price + 50}")
+                else:
+                    if bid is None:
+                        db.add_auto_bid(lot_id, user_id, max_bid, starting_price)
+                        db.add_bid(lot_id, user_id, starting_price, bid_time)
+                        bid = db.get_bid_lot(lot_id)
+                        bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
+                    else:
+                        if auto_bid is None:
+                            if auto_bid < max_bid:
+                                delete_auto_bid(lot_id)
+                            bid = bid + 25
+                            db.add_auto_bid(lot_id, user_id, max_bid, bid)
+                            db.add_bid(lot_id, user_id, bid, bid_time)
+                            bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
+                        elif auto_bid < int(max_bid):
+                            delete_auto_bid(lot_id)
+                            bid = bid + 25
+                            db.add_auto_bid(lot_id, user_id, max_bid, bid)
+                            db.add_bid(lot_id, user_id, bid, bid_time)
+                            bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
+                        else:
+                            bot.send_message(call.message.chat.id, f"Вы не иожете установить авто ставку для лота {lot_id}.\nТак как минимальная автоставка доступная для это лота равнв {auto_bid + 25}")
+            else:
+                if auto_bid is None:
+                    bid = bid + 25
+                    db.update_bid_user(bid, bid_time, user_id, lot_id)
+                    db.add_auto_bid(lot_id, user_id, max_bid, bid)
+                    bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
+                elif auto_bid < int(max_bid):
+                    delete_auto_bid(lot_id)
+                    bid = bid + 25
+                    db.update_bid_user(bid, bid_time, user_id, lot_id)
+                    db.add_auto_bid(lot_id, user_id, max_bid, bid)
                     bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
                 else:
-                    bid = bid + 25
-                    db.add_auto_bid(lot_id, user_id, max_bid, bid)
-                    db.add_bid(lot_id, user_id, bid, bid_time)
-            else:
-                bid = bid + 25
-                db.update_bid_user(bid, bid_time, user_id, lot_id)
-                db.add_auto_bid(lot_id, user_id, max_bid, bid)
+                    bot.send_message(call.message.chat.id,
+                                     f"Вы не можете установить авто ставку для лота {lot_id}.\nТак как минимальная автоставка доступная для это лота равнв {auto_bid + 25}")
             message_text = (
                 f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
                 f': {bid + 25}\nТекущая ставка: {bid}')
-            print(message_id)
             bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
                                      reply_markup=create_lot_button(lot_id))
             bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text,
@@ -189,7 +224,6 @@ def callback_handler(call):
         username = call.from_user.username
         user_id = db.get_user_id(username)
         auto_bid = db.get_auto_bid(lot_id, user_id)
-        print(auto_bid, lot_id, user_id)
         if auto_bid is None:
             bot.send_message(call.message.chat.id, "Сколько вы готовы потратить на этот лот? Введите сумму:")
             bot.register_next_step_handler(call.message, set_max_bid, lot_id)
@@ -253,8 +287,9 @@ def start_command(message):
                                     f': {starting_price}\nТекущая ставка: --')
                     bot.send_photo(chat_id=message.chat.id, photo=image_path, caption=message_text, reply_markup=bot_lot_button(lot_id))
     else:
-        username = message.from_user.username or str(message.from_user.id)
-        check = db.check_user(username)
+        username = message.from_user.username
+        user_tg_id = message.from_user.id
+        check = db.check_user(username, user_tg_id)
         print(check)
         if check == 0:
             button = types.ReplyKeyboardMarkup(resize_keyboard=True)

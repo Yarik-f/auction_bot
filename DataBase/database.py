@@ -49,6 +49,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS Users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username VARCHAR(50) NOT NULL,
+                user_tg_id INTEGER,
                 role_id INTEGER,
                 balance DECIMAL DEFAULT 0,
                 successful_bids INTEGER DEFAULT 0,
@@ -155,7 +156,7 @@ class Database:
 
     def fill_table(self, data):
         sql_insert_roles = "INSERT INTO Roles (role_name, permissions) values(?, ?)"
-        sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
+        sql_insert_users = "INSERT INTO Users (username, user_tg_id, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?, ?)"
         sql_insert_admins = "INSERT INTO Admins (username, password, balance, role_id, commission_rate, penalties) values(?, ?, ?, ?, ?, ?)"
         sql_insert_lot_images = "INSERT INTO Lot_images (image_tg, image_pt, lot_id) values(?, ?, ?)"
         sql_insert_lots = "INSERT INTO Lots (title, description, location, starting_price, seller_id, start_time, end_time, document_type, status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -303,18 +304,18 @@ class Database:
         self.con.commit()
         self.con.rollback()
 
-    def add_user(self, username):
+    def add_user(self, username, user_tg_id):
         with sql.connect(db_path) as self.con:
-            sql_insert_users = "INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?)"
+            sql_insert_users = "INSERT INTO Users (username, user_tg_id, role_id, balance, successful_bids, auto_bid_access, is_banned) values(?, ?, ?, ?, ?, ?, ?)"
             self.con.execute(sql_insert_users,
-                             [username, 1, 0, 0, 0, 0])
+                             [username, user_tg_id, 1, 0, 0, 0, 0])
             self.con.commit()
-            self.check_user(username)
+            self.check_user(username, user_tg_id)
     def get_user_id(self, username):
         with sql.connect(db_path) as self.con:
             query = "SELECT user_id FROM Users WHERE username = ?"
             data = self.con.execute(query, (username,)).fetchone()
-            return data[0]
+            return data[0] if data else None
 
     def check_role(self, name_table, username):
         with sql.connect(db_path) as self.con:
@@ -323,7 +324,7 @@ class Database:
             print(data[0])
             return data[0]
 
-    def check_user(self, username):
+    def check_user(self, username, user_tg_id):
         with sql.connect(db_path) as self.con:
             user_query = "SELECT username FROM Users WHERE username = ?"
             data_user = self.con.execute(user_query, (username,)).fetchone()
@@ -332,7 +333,7 @@ class Database:
             data_admin = self.con.execute(admin_query, (username,)).fetchone()
             print(data_admin)
             if data_user is None and data_admin is None:
-                self.add_user(username)
+                self.add_user(username, user_tg_id)
                 role = self.check_role('Users', username)
                 return role
             elif data_user and data_admin is None:
@@ -426,11 +427,27 @@ class Database:
             self.con.execute(query, (bid_amount, bid_time, user_id, lot_id))
             self.con.commit()
 
+    def get_max_bid_auto_bid(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT max_bid FROM Auto_bids WHERE lot_id = ?"
+            data = self.con.execute(query, (lot_id,)).fetchone()
+            return data[0] if data else None
     def get_auto_bid(self, lot_id, user_id):
         with sql.connect(db_path) as self.con:
             query = "SELECT max_bid, current_bid FROM Auto_bids WHERE lot_id = ? AND user_id = ?"
             data = self.con.execute(query, (lot_id, user_id)).fetchall()
             return data if data else None
+    def get_user_tg_id_by_auto_bid(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = """
+            SELECT u.user_tg_id 
+            FROM Auto_bids ab
+            JOIN Users u ON ab.user_id = u.user_id
+            WHERE ab.lot_id = ?
+            """
+            data = self.con.execute(query, (lot_id,)).fetchone()
+            return data[0]
+
     def add_auto_bid(self, lot_id, user_id, max_bid, current_bid):
         with sql.connect(db_path) as self.con:
             sql_insert_auto_bids = "INSERT INTO Auto_bids (lot_id, user_id, max_bid, current_bid) values(?, ?, ?, ?)"
@@ -440,6 +457,11 @@ class Database:
         with sql.connect(db_path) as self.con:
             query = "UPDATE Auto_bids SET current_bid = ? WHERE user_id = ? AND lot_id = ?"
             self.con.execute(query, (current_bid, user_id, lot_id))
+            self.con.commit()
+    def delete_auto_bid(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "DELETE FROM Auto_bids WHERE lot_id = ?"
+            self.con.execute(query, (lot_id,))
             self.con.commit()
 
     def addBalance(self, u, amount):
@@ -748,13 +770,13 @@ data_db = {
         ("root", '{"manage_users": true, "manage_admins": true, "view_all_finances": true}'),
     ],
     "users": [
-        ("ivanov", 1, 1000.50, 5, 0, 0),
-        ("petrov", 1, 2000.00, 2, 1, 0),
-        ("sidorov", 1, 1500.75, 3, 0, 0),
-        ("fedorov", 1, 500.25, 1, 1, 0),
-        ("kuznetsov", 1, 1200.00, 4, 0, 0),
-        ("ivanova", 1, 3000.00, 6, 1, 0),
-        ("petrova", 1, 800.80, 0, 0, 0),
+        ("ivanov", 1434208032, 1, 1000.50, 5, 0, 0),
+        ("petrov", 1434208032, 1, 2000.00, 2, 1, 0),
+        ("sidorov", 1434208032, 1, 1500.75, 3, 0, 0),
+        ("fedorov", 1434208032, 1, 500.25, 1, 1, 0),
+        ("kuznetsov", 1434208032, 1, 1200.00, 4, 0, 0),
+        ("ivanova", 1434208032, 1, 3000.00, 6, 1, 0),
+        ("petrova", 1434208032, 1, 800.80, 0, 0, 0),
     ],
     "admins": [
         ("admin1", "12345678", 0, 2, 5.0, 2),
