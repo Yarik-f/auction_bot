@@ -160,13 +160,11 @@ def process_auto_bid(call): #Добавление автоставки, толь
                         bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
                     else:
                         if auto_bid is None:
-                            if auto_bid < max_bid:
-                                delete_auto_bid(lot_id)
                             bid = bid + 25
                             db.add_auto_bid(lot_id, user_id, max_bid, bid)
                             db.add_bid(lot_id, user_id, bid, bid_time)
                             bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
-                        elif auto_bid < int(max_bid):
+                        elif auto_bid <= int(max_bid):
                             delete_auto_bid(lot_id)
                             bid = bid + 25
                             db.add_auto_bid(lot_id, user_id, max_bid, bid)
@@ -180,7 +178,7 @@ def process_auto_bid(call): #Добавление автоставки, толь
                     db.update_bid_user(bid, bid_time, user_id, lot_id)
                     db.add_auto_bid(lot_id, user_id, max_bid, bid)
                     bot.send_message(call.message.chat.id, f"Вы установили авто ставку для лота {lot_id}.")
-                elif auto_bid < int(max_bid):
+                elif auto_bid <= int(max_bid):
                     delete_auto_bid(lot_id)
                     bid = bid + 25
                     db.update_bid_user(bid, bid_time, user_id, lot_id)
