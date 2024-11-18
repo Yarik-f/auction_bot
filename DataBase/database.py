@@ -665,7 +665,7 @@ class Database:
                                                     ON Lots.lot_id = Lot_images.lot_id 
                                                 INNER JOIN Users 
                                                     ON Bids.user_id = Users.user_id
-                                                WHERE description = '{textSearch}'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
+                                                WHERE description LIKE '%{textSearch}%'   """)  # выводим данные из базы данных для заполнения таблицы (товары которые участвуют в аукционе)
                 table = table.fetchall()
                 return [table]
             elif combo == 'Номер лота':

@@ -10,7 +10,6 @@ class Ui_MainWindow(object):
     #def setupUi(self, MainWindow, root, Information):
         self.name = Information[1]
         self.Information = Information
-        #self.name = 'admin'
         self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1350, 930)
