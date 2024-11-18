@@ -416,7 +416,17 @@ class Database:
             query = "SELECT MAX(bid_amount) FROM Bids WHERE lot_id = ? and user_id = ?"
             data = self.con.execute(query, (lot_id, user_id)).fetchone()
             return data[0] if data else None
-        
+
+    def get_user_tg_id_by_bid(self, lot_id, user_id):
+        with sql.connect(db_path) as self.con:
+            query = """
+            SELECT u.user_tg_id 
+            FROM Bids b
+            JOIN Users u ON b.user_id = u.user_id
+            WHERE b.lot_id = ? AND b.user_id = ?
+            """
+            data = self.con.execute(query, (lot_id, user_id,)).fetchone()
+            return data[0]
     def add_bid(self, lot_id, user_id, amount, bid_time):
         with sql.connect(db_path) as self.con:
             sql_insert_bids = "INSERT INTO Bids (lot_id, user_id, bid_amount, bid_time) values(?, ?, ?, ?)"
@@ -447,6 +457,11 @@ class Database:
             JOIN Users u ON ab.user_id = u.user_id
             WHERE ab.lot_id = ?
             """
+            data = self.con.execute(query, (lot_id,)).fetchone()
+            return data[0]
+    def get_user_id_by_auto_bid(self, lot_id):
+        with sql.connect(db_path) as self.con:
+            query = "SELECT user_id FROM Auto_bids WHERE lot_id = ?"
             data = self.con.execute(query, (lot_id,)).fetchone()
             return data[0]
 

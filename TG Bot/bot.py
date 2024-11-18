@@ -88,12 +88,50 @@ def send_lot_at_time(lot_data): # Отправка картинки с пере�
 #         print('ccccccc')
 
 def get_members(user_id, lot_id):
-    bot.send_message(user_id, f'Ваша автоставка на лот {lot_id} оказалась меньше чем предложил другой пользователь')
+    bot.send_message(user_id, f'Ваша автоставка на лот {lot_id} оказалась меньше ставки которую предложил другой пользователь')
 
 def delete_auto_bid(lot_id):
     user_tg_id = db.get_user_tg_id_by_auto_bid(lot_id)
     db.delete_auto_bid(lot_id)
     get_members(user_tg_id, lot_id)
+def update_auto_bid(my_bid, auto_bid, lot_id, bid, user_id, bid_time):
+    user_auto_bid = db.get_user_id_by_auto_bid(lot_id)
+    user_tg_auto_bid = db.get_user_tg_id_by_auto_bid(lot_id)
+    user_tg = db.get_user_tg_id_by_bid(lot_id, user_id)
+    if auto_bid > bid:
+        if my_bid is None:
+            db.add_bid(lot_id, user_id, bid, bid_time)
+        else:
+            db.update_bid_user(bid, bid_time, user_id, lot_id)
+        new_bid = int(db.get_bid_lot(lot_id))
+        new_bid = new_bid + 25
+        if auto_bid == new_bid:
+            db.update_bid_user(new_bid, bid_time, user_auto_bid, lot_id)
+            bot.send_message(user_tg_auto_bid,
+                             f'Ваша ставка на лот {lot_id} обновилась до {bid}, также Ваша автоставка дошла до придела так что будет удаленна')
+            db.update_bid_user(bid, bid_time, user_auto_bid, lot_id)
+            db.delete_auto_bid(lot_id)
+        else:
+            db.update_bid_user(new_bid, bid_time, user_auto_bid, lot_id)
+            db.update_auto_bid(new_bid, user_auto_bid, lot_id)
+            bot.send_message(user_tg, f'Вы совершили ставку на лот {lot_id}, но у другого рользователя стоит автоставка до {auto_bid}.'
+                                  f'Чтобы перебить ставку пользователя, нужно совершить ставку превышающую автоставку.'
+                                  f'Для того чтобы перебить автоставку пользователя Вам нужно либо предложить свою ставку превышающию автоставку, либо поставить свою автоставку, либо пребить автоставку обычными ставками ')
+            bot.send_message(user_tg_auto_bid,
+                             f'Ваша ставка на лот {lot_id} обновилась до {new_bid}')
+        print(new_bid)
+        return new_bid
+    elif auto_bid == bid:
+        bot.send_message(user_tg,
+                         f'Вы совершили ставку на лот {lot_id}, но у другого рользователя стоит автоставка до {auto_bid}.'
+                         f'Ваша ставка не будет засчитана т.к пользователь поставил автоставку раньше Вас, при этом автоставка пользователя будет удаленна')
+        bot.send_message(user_tg_auto_bid,
+                         f'Ваша ставка на лот {lot_id} обновилась до {bid}, также Ваша автоставка дошла до придела так что будет удаленна')
+        db.update_bid_user(bid, bid_time, user_auto_bid, lot_id)
+        db.delete_auto_bid(lot_id)
+
+    else:
+        return bid
 
 def process_bid(call): # Обработка Ставок
     lot_id = call.data.split("bid_")[1]
@@ -104,6 +142,8 @@ def process_bid(call): # Обработка Ставок
     lot_data = db.get_lot_data_by_id(lot_id)
     message_bot_id = call.message.message_id
     message_id = db.get_message_id(lot_id)
+    auto_bid = db.get_max_bid_auto_bid(lot_id)
+    new_bid = 0
     if message_id:
         bid = db.get_bid_lot(lot_id)
         my_bid = db.my_get_bid_lot(lot_id, user_id)
@@ -114,15 +154,24 @@ def process_bid(call): # Обработка Ставок
                     db.add_bid(lot_id, user_id, starting_price, bid_time)
                     bid = db.get_bid_lot(lot_id)
                 else:
-                    bid = bid + 25
-                    db.add_bid(lot_id, user_id, bid, bid_time)
+                    new_bid = bid + 25
+                    if auto_bid:
+                        new_bid = update_auto_bid(my_bid, auto_bid, lot_id, new_bid, user_id, bid_time)
+                    else:
+                        db.add_bid(lot_id, user_id, new_bid, bid_time)
+
             else:
-                bid = bid + 25
-                db.update_bid_user(bid, bid_time, user_id, lot_id)
+                new_bid = bid + 25
+                if auto_bid:
+                    new_bid = update_auto_bid(my_bid, auto_bid, lot_id, new_bid, user_id, bid_time)
+
+                else:
+                    db.update_bid_user(new_bid, bid_time, user_id, lot_id)
+
 
             message_text = (
                 f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
-                f': {bid + 25}\nТекущая ставка: {bid}')
+                f': {new_bid + 25}\nТекущая ставка: {new_bid}')
             print(message_id)
             bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
                                      reply_markup=create_lot_button(lot_id))
