@@ -470,10 +470,29 @@ def show_my_lots(message):
         Lots = [] # Список для всех возможных кнопок 
         # Заполняем список всевозможными кнопками
         for s in lots:
-            Buttons = InlineKeyboardButton(f'Лот №{s[0]} Наименование {s[1]}', callback_data=f"lot_{s[0]}" ) # Создаём кнопку определённого лота в котором мы участвуем    
+            Buttons = InlineKeyboardButton(f'{s[1]} Лот №{s[0]}', callback_data=f"lot_{s[0]}" ) # Создаём кнопку определённого лота в котором мы участвуем    
             Lots.append(Buttons) # Добавляем кнопки в наш список  
         myLots.add(*Lots) # Заполняем нашу переменную всеми кнопками из списка       
         bot.send_message(message.chat.id,"Выбирайте 🥰",reply_markup=myLots) # Отображаем все кнопки в телеграмме    
+
+def my():
+    while True:
+        t = db.lotTime()
+        time.sleep(5)
+        dt_now = datetime.now()
+        print(len(t), t)
+        if len(t) == 1:
+            t1 = datetime.strptime(t[0][1], '%Y-%m-%d %H:%M')
+            if  dt_now > t1:       
+                print(t[0][0])
+                p = db.history(t[0][0])
+                print(p)
+        
+                bot.send_message(p[3], f"Вы выйграли в ставках на лот № {t[0][0]}")
+        #
+
+threading.Thread(target=my, daemon=True).start()
+
 
 if __name__ == '__main__':
     print("Бот запущен...")

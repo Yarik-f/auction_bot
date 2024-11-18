@@ -371,15 +371,15 @@ class Database:
             return data
         
     def get_user_lots(self, user_id):
+        dt_now = (datetime.datetime.now())  # Определяем текущее время
         with sql.connect(db_path) as self.con:
             query = """
-            SELECT l.lot_id, l.title
-                FROM Bids b
+            SELECT l.lot_id, l.title FROM Bids b
                 JOIN Lots l 
                     ON b.lot_id = l.lot_id
-                WHERE b.user_id = ?
-            """
-            data = self.con.execute(query, (user_id,)).fetchall()
+                WHERE b.user_id = ? and l.end_time > ?   """
+            
+            data = self.con.execute(query, (user_id, dt_now)).fetchall()
             return data
 
     def get_end_time(self, lot_id):
@@ -775,6 +775,30 @@ class Database:
         Information = Information.fetchall()
         return Information[0]
     
+
+    def lotTime(self):
+        dt_now = (datetime.datetime.now())  # Определяем текущее время
+        with sql.connect(db_path) as self.con:
+            t = self.con.execute(f"""SELECT lot_id, min(end_time) FROM Lots 
+                                        WHERE Lots.end_time > '{dt_now}' """)
+            t = t.fetchall()
+            return t
+        
+    def history(self, id):
+        with sql.connect(db_path) as self.con:
+            print(id)
+            Information = self.con.execute(f"""SELECT Bids.user_id, max(bid_amount), bid_time, user_tg_id FROM Bids 
+                                                    INNER JOIN Users 
+                                                        ON Bids.user_id = Users.user_id
+                                                    WHERE Bids.lot_id = {id} """)
+            Information = Information.fetchall()[0]
+
+
+            self.con.execute(f"""INSERT INTO Auction_history (lot_id, winner_id, final_price, completion_time)
+                                    values({id}, {Information[0]}, {Information[1]}, '{Information[2]}') """)  # Происходит дабовления строки в SQL Таблицу
+            
+            return Information
+
 
 
     
