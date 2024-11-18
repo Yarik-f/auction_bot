@@ -520,7 +520,7 @@ class Database:
     def add_delete(self, n, u, newBalance, id):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
-            with self.con:
+            with sql.connect(db_path) as self.con:
                 newBalance = round(newBalance, 2)
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
@@ -532,7 +532,7 @@ class Database:
                 
         elif u == 11:
             dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M')
-            with self.con:
+            with sql.connect(db_path) as self.con:
                 self.con.execute(f"""UPDATE Lots
                                     SET end_time = '{dt_now}'
                                     WHERE lot_id = {n} """)
@@ -540,7 +540,7 @@ class Database:
     # Заполнение таблицы товаров на аукционе
     def Auction(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
-        with self.con:
+        with sql.connect(db_path) as self.con:
             table = self.con.execute(f"""SELECT Lots.lot_id, description, image_pt, starting_price, MAX(bid_amount), start_time, end_time, username FROM Lots
                                             INNER JOIN Lot_images
                                                 ON Lots.lot_id = Lot_images.lot_id
@@ -590,7 +590,7 @@ class Database:
     # Заполнения таблицы моих товаров на аукционе     
     def myProducts_db(self, name):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
-        with self.con:
+        with sql.connect(db_path) as self.con:
             r = self.con.execute(f"""SELECT admin_id FROM Admins
                                                 WHERE username = '{name}'   """)
             r = r.fetchall()
@@ -656,7 +656,7 @@ class Database:
 
     # Функция для заполнения таблицы история торгов после нажатой кнопки поиск      
     def salesSearch_db(self, textSearch, combo):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             if combo == 'Описание':
                 table = self.con.execute(f"""SELECT bid_id, Bids.lot_id, description, image_pt, username, starting_price, bid_amount FROM Bids
                                                 INNER JOIN Lots 
@@ -693,17 +693,17 @@ class Database:
 
     # Функция добавления значений в сам файл SQL
     def add_user_db(self, data):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             self.con.execute(f"""INSERT INTO Users (username, role_id, balance, successful_bids, auto_bid_access, is_banned)
                               values('{data[0]}', 1, {data[1]}, {data[2]}, {data[3]}, {data[4]})""")  # Происходит дабовления строки в SQL Таблицу
 
     def add_user_A_db(self, data):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             self.con.execute(f"""INSERT INTO Admins (username, password, balance, role_id,  commission_rate, penalties)
                               values('{data[0]}', '{data[1]}', {data[2]}, {data[3]}, {data[4]}, {data[5]})""")  # Происходит дабовления строки в SQL Таблицу
 
     def delete_User_db(self, d):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             self.con.execute(f"""DELETE FROM Users  
                                      WHERE username = '{d[0]}' and balance = {d[1]} and successful_bids = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
 
@@ -713,7 +713,7 @@ class Database:
                                      WHERE username = '{d[0]}' and password = '{d[1]}' and balance = {d[2]}""")  # Удаляем строчку по индексу чс базы данных
 
     def search_db(self, pe, p):
-        with self.con:
+       with sql.connect(db_path) as self.con:
             if pe[0] == 1:
                 r = self.con.execute(f"""SELECT user_id FROM Users
                                                 WHERE username = '{p[0]}' and balance = {p[2]} and successful_bids = {p[3]}""")
@@ -726,7 +726,7 @@ class Database:
                               values('{p[0]}', '{pe[4]}', {p[2]}, {pe[0]}, {5}, {0})""")
 
     def edit_Admin_db(self, p, d):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             r = self.con.execute(f"""SELECT admin_id FROM Admins
                                                 WHERE username = '{d[0]}'  and balance = {d[3]} and commission_rate = {d[4]} and penalties == {d[5]}""")
             r = r.fetchall()
@@ -736,7 +736,7 @@ class Database:
                                             WHERE admin_id = {r[0][0]}""")  # Редактируем данные ячейки
 
     def edit_MW1_db(self, p):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             self.con.execute(f"""UPDATE Lots
                                         SET description = '{p[1]}', starting_price = {p[3]}, start_time == '{p[4]}', end_time = '{p[5]}'
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки  
@@ -746,7 +746,7 @@ class Database:
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
 
     def edit_MW2_db(self, p):
-        with self.con:
+        with sql.connect(db_path) as self.con:
             self.con.execute(f"""UPDATE Lots
                                         SET description = '{p[1]}', starting_price = {p[3]}
                                         WHERE lot_id = {p[0]}""")  # Редактируем данные ячейки
@@ -775,7 +775,6 @@ class Database:
         Information = Information.fetchall()
         return Information[0]
     
-
     def lotTime(self):
         dt_now = (datetime.datetime.now())  # Определяем текущее время
         with sql.connect(db_path) as self.con:
@@ -786,22 +785,24 @@ class Database:
         
     def history(self, id):
         with sql.connect(db_path) as self.con:
-            print(id)
-            Information = self.con.execute(f"""SELECT Bids.user_id, max(bid_amount), bid_time, user_tg_id FROM Bids 
+            Information = self.con.execute(f"""SELECT Bids.user_id, max(bid_amount), bid_time, user_tg_id, balance FROM Bids 
                                                     INNER JOIN Users 
                                                         ON Bids.user_id = Users.user_id
                                                     WHERE Bids.lot_id = {id} """)
             Information = Information.fetchall()[0]
 
-
             self.con.execute(f"""INSERT INTO Auction_history (lot_id, winner_id, final_price, completion_time)
                                     values({id}, {Information[0]}, {Information[1]}, '{Information[2]}') """)  # Происходит дабовления строки в SQL Таблицу
             
             return Information
+        
+    def write_offOfFunds(self, bal, id):
+        with sql.connect(db_path) as self.con:
+            self.con.execute(f"""UPDATE Users
+                                        SET balance = '{bal}'
+                                        WHERE user_id = {id}""")  # Редактируем данные ячейки
 
-
-
-    
+        
 
 
 
