@@ -475,10 +475,27 @@ def show_my_lots(message):
         myLots.add(*Lots) # Заполняем нашу переменную всеми кнопками из списка       
         bot.send_message(message.chat.id,"Выбирайте 🥰",reply_markup=myLots) # Отображаем все кнопки в телеграмме    
 
+
 def my():
     while True:
         t = db.lotTime()
-        time.sleep(5)
+        time.sleep(55)
+        t1 = db.lotTime()
+        print(len(t), t, t1)
+        if len(t) == 1:
+            if  t1[0][0] != t[0][0]:       
+                print(t[0][0])
+                p = db.history(t[0][0])
+                print(p)
+        
+                bot.send_message(p[3], f"Вы выйграли в ставках на лот № {t[0][0]}")
+        #
+
+threading.Thread(target=my, daemon=True).start()
+
+"""def my():
+    while True:
+        t = db.lotTime()
         dt_now = datetime.now()
         print(len(t), t)
         if len(t) == 1:
@@ -491,9 +508,42 @@ def my():
                 bot.send_message(p[3], f"Вы выйграли в ставках на лот № {t[0][0]}")
         #
 
-threading.Thread(target=my, daemon=True).start()
+threading.Thread(target=my, daemon=True).start()"""
 
 
 if __name__ == '__main__':
     print("Бот запущен...")
     bot.infinity_polling()
+def my():
+    while True:
+        t = db.lotTime()
+        time.sleep(55)
+        t1 = db.lotTime()
+        print(len(t), t, t1)
+        if len(t) == 1:
+            if  t1[0][0] != t[0][0]:       
+                print(t[0][0])
+                p = db.history(t[0][0])
+                print(p)
+        
+                bot.send_message(p[3], f"Вы выйграли в ставках на лот № {t[0][0]}")
+        #
+
+threading.Thread(target=my, daemon=True).start()
+
+"""def my():
+    while True:
+        t = db.lotTime()
+        dt_now = datetime.now()
+        print(len(t), t)
+        if len(t) == 1:
+            t1 = datetime.strptime(t[0][1], '%Y-%m-%d %H:%M')
+            if  dt_now > t1:       
+                print(t[0][0])
+                p = db.history(t[0][0])
+                print(p)
+        
+                bot.send_message(p[3], f"Вы выйграли в ставках на лот № {t[0][0]}")
+        #
+
+threading.Thread(target=my, daemon=True).start()"""
