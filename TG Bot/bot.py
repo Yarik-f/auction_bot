@@ -47,6 +47,13 @@ def yes_no_button(lot_id, max_bid):
     keyboard.add(button_yes, button_no)
     return keyboard
 
+def yes_no_button_my_bid(lot_id, my_bid):
+    keyboard = types.InlineKeyboardMarkup()
+    button_yes = types.InlineKeyboardButton("Да", callback_data=f"call_{lot_id}:{my_bid}")
+    button_no = types.InlineKeyboardButton("Нет", callback_data="fold")
+    keyboard.add(button_yes, button_no)
+    return keyboard
+
 def send_lot_at_time(lot_data): # Отправка картинки с переданными параметрами(картинка, текст, ...)
     message_text, image_path, target_time, lot_id = lot_data
 
@@ -68,24 +75,6 @@ def send_lot_at_time(lot_data): # Отправка картинки с пере�
     else:
         print("Ошибка: Неверный путь к изображению")
 
-# def update_bid(call):
-#     lot_id = call.data.split("bid_")[1]
-#     bid_time = datetime.now()
-#     bid_time = bid_time.strftime('%Y-%m-%d %H:%M')
-#     username = call.from_user.username
-#     user_id = db.get_user_id(username)
-#     auto_bid = db.get_auto_bid(lot_id, user_id)
-#     max_bid = db.get_bid_lot(lot_id)
-#     if auto_bid:
-#         if auto_bid[0][0] > max_bid:
-#             if auto_bid[0][1] < max_bid:
-#                 bid = max_bid + 25
-#                 db.update_bid_user(bid, bid_time, user_id, lot_id)
-#                 db.update_auto_bid(bid, user_id, lot_id)
-#         else:
-#             bot.send_message(chat_id=call.message.chat.id, text="Вашу ставку перебили")
-#     else:
-#         print('ccccccc')
 
 def get_members(user_id, lot_id):
     bot.send_message(user_id, f'Ваша автоставка на лот {lot_id} оказалась меньше ставки которую предложил другой пользователь')
@@ -108,9 +97,10 @@ def update_auto_bid(my_bid, auto_bid, lot_id, bid, user_id, bid_time):
         if auto_bid == new_bid:
             db.update_bid_user(new_bid, bid_time, user_auto_bid, lot_id)
             bot.send_message(user_tg_auto_bid,
-                             f'Ваша ставка на лот {lot_id} обновилась до {bid}, также Ваша автоставка дошла до придела так что будет удаленна')
+                             f'Ваша ставка на лот {lot_id} обновилась до {new_bid}, также Ваша автоставка дошла до придела так что будет удаленна')
             db.update_bid_user(bid, bid_time, user_auto_bid, lot_id)
             db.delete_auto_bid(lot_id)
+            return new_bid
         else:
             db.update_bid_user(new_bid, bid_time, user_auto_bid, lot_id)
             db.update_auto_bid(new_bid, user_auto_bid, lot_id)
@@ -119,8 +109,8 @@ def update_auto_bid(my_bid, auto_bid, lot_id, bid, user_id, bid_time):
                                   f'Для того чтобы перебить автоставку пользователя Вам нужно либо предложить свою ставку превышающию автоставку, либо поставить свою автоставку, либо пребить автоставку обычными ставками ')
             bot.send_message(user_tg_auto_bid,
                              f'Ваша ставка на лот {lot_id} обновилась до {new_bid}')
-        print(new_bid)
-        return new_bid
+            print(new_bid)
+            return new_bid
     elif auto_bid == bid:
         bot.send_message(user_tg,
                          f'Вы совершили ставку на лот {lot_id}, но у другого рользователя стоит автоставка до {auto_bid}.'
@@ -129,8 +119,13 @@ def update_auto_bid(my_bid, auto_bid, lot_id, bid, user_id, bid_time):
                          f'Ваша ставка на лот {lot_id} обновилась до {bid}, также Ваша автоставка дошла до придела так что будет удаленна')
         db.update_bid_user(bid, bid_time, user_auto_bid, lot_id)
         db.delete_auto_bid(lot_id)
-
-    else:
+        return bid
+    elif auto_bid < bid:
+        bot.send_message(user_tg_auto_bid,
+                         f'Вашу автоставку на лот {lot_id} перебили, из-за этого она удаленна')
+        db.update_bid_user(auto_bid, bid_time, user_auto_bid, lot_id)
+        db.delete_auto_bid(lot_id)
+        db.update_bid_user(bid, bid_time, user_id, lot_id)
         return bid
 
 def process_bid(call): # Обработка Ставок
@@ -143,7 +138,6 @@ def process_bid(call): # Обработка Ставок
     message_bot_id = call.message.message_id
     message_id = db.get_message_id(lot_id)
     auto_bid = db.get_max_bid_auto_bid(lot_id)
-    new_bid = 0
     if message_id:
         bid = db.get_bid_lot(lot_id)
         my_bid = db.my_get_bid_lot(lot_id, user_id)
@@ -153,22 +147,19 @@ def process_bid(call): # Обработка Ставок
                 if bid is None:
                     db.add_bid(lot_id, user_id, starting_price, bid_time)
                     bid = db.get_bid_lot(lot_id)
+                    new_bid = bid
                 else:
                     new_bid = bid + 25
                     if auto_bid:
                         new_bid = update_auto_bid(my_bid, auto_bid, lot_id, new_bid, user_id, bid_time)
                     else:
                         db.add_bid(lot_id, user_id, new_bid, bid_time)
-
             else:
                 new_bid = bid + 25
                 if auto_bid:
                     new_bid = update_auto_bid(my_bid, auto_bid, lot_id, new_bid, user_id, bid_time)
-
                 else:
                     db.update_bid_user(new_bid, bid_time, user_id, lot_id)
-
-
             message_text = (
                 f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
                 f': {new_bid + 25}\nТекущая ставка: {new_bid}')
@@ -182,6 +173,52 @@ def process_bid(call): # Обработка Ставок
         bot.answer_callback_query(call.id, "Лот не найден.")
 
     bot.answer_callback_query(call.id, f"Вы сделали ставку на лот {lot_id}")  #
+def process_my_bid(call):
+    lot_id = call.data.split("call_")[1].split(":")[0]
+    my_call_bid = call.data.split("call_")[1].split(":")[1]
+    bid_time = datetime.now()
+    bid_time = bid_time.strftime('%Y-%m-%d %H:%M')
+    username = call.from_user.username
+    user_id = db.get_user_id(username)
+    lot_data = db.get_lot_data_by_id(lot_id)
+    message_id = db.get_message_id(lot_id)
+    auto_bid = db.get_max_bid_auto_bid(lot_id)
+    new_bid = 0
+    if message_id:
+        bid = db.get_bid_lot(lot_id)
+        my_bid = db.my_get_bid_lot(lot_id, user_id)
+        for lot in lot_data:
+            lot_id, starting_price, start_time, title, description, location, image_path = lot
+            if my_bid is None:
+                if int(my_call_bid) <= starting_price:
+                    bot.send_message(call.message.chat.id,
+                                     f"Вы не иожете установить ставку для лота {lot_id}.\nТак как минимальная автоставка {starting_price}")
+                else:
+                    if bid is None:
+                        db.add_bid(lot_id, user_id, my_call_bid, bid_time)
+                        bid = db.get_bid_lot(lot_id)
+                        new_bid = bid
+                    else:
+                        new_bid = my_call_bid
+                        if auto_bid:
+                            new_bid = update_auto_bid(my_bid, auto_bid, lot_id, my_call_bid, user_id, bid_time)
+                        else:
+                            db.add_bid(lot_id, user_id, my_call_bid, bid_time)
+            else:
+                new_bid = my_call_bid
+                if auto_bid:
+                    new_bid = update_auto_bid(my_bid, auto_bid, lot_id, my_call_bid, user_id, bid_time)
+                else:
+                    db.update_bid_user(my_call_bid, bid_time, user_id, lot_id)
+
+            message_text = (
+                f'Название: {title}\nОписание: {description}\nМестоположение: {location}\nСледующая ставка'
+                f': {new_bid + 25}\nТекущая ставка: {new_bid}')
+            bot.edit_message_caption(chat_id=channel_id, message_id=message_id, caption=message_text,
+                                     reply_markup=create_lot_button(lot_id))
+            bot.send_photo(chat_id=call.message.chat.id, photo=image_path, caption=message_text,
+                           reply_markup=bot_lot_button(lot_id))
+
 def process_auto_bid(call): #Добавление автоставки, только добавления
     lot_id = call.data.split("yes_")[1].split(":")[0]
     max_bid = call.data.split("yes_")[1].split(":")[1]
@@ -255,7 +292,6 @@ def process_auto_bid(call): #Добавление автоставки, толь
 def callback_handler(call):
     if call.data.startswith("bid_"):
         threading.Thread(target=process_bid, args=(call,)).start()
-        # threading.Thread(target=update_bid, args=(call,)).start()
     elif call.data.startswith("time_"):
         lot_id = call.data.split("time_")[1]
 
@@ -273,7 +309,8 @@ def callback_handler(call):
         bot.answer_callback_query(call.id, f"После окночания торгов, победитель должен выйти на связь с продавцом самостоятельно в течении суток. Победитель обязан выкупить лот в течении 3-ех дней, после окончания аукциона.\nНЕ ВЫКУП ЛОТА -- БАН", show_alert=True)
     elif call.data.startswith("my_bid_"):
         lot_id = call.data.split("my_bid_")[1]
-        bot.answer_callback_query(call.id, f"{lot_id}")
+        bot.send_message(call.message.chat.id, "Сколько вы хотите поставить на этот лот? Введите сумму:")
+        bot.register_next_step_handler(call.message, set_my_bid, lot_id)
     elif call.data.startswith("invise_bid_"):
         lot_id = call.data.split("invise_bid_")[1]
         username = call.from_user.username
@@ -287,6 +324,8 @@ def callback_handler(call):
 
     elif call.data.startswith("yes_"):
         threading.Thread(target=process_auto_bid, args=(call,)).start()
+    elif call.data.startswith("call_"):
+        threading.Thread(target=process_my_bid, args=(call,)).start()
     elif call.data == 'no':
         bot.send_message(call.message.chat.id, "Вы отменили установку авто ставки.")
 
@@ -318,6 +357,11 @@ def set_max_bid(message, lot_id):
     max_bid = int(message.text)
 
     bot.send_message(message.chat.id, f"Вы готовы потратить: {max_bid} на этот лот.\nВы готовы сделать ставку", reply_markup=yes_no_button(lot_id, max_bid))
+
+def set_my_bid(message, lot_id):
+    my_bid = int(message.text)
+
+    bot.send_message(message.chat.id, f"Вы готовы потратить: {my_bid} на этот лот.\nВы готовы сделать ставку", reply_markup=yes_no_button_my_bid(lot_id, my_bid))
 
 def send_auction_lot():# Получение и формирование данных о лоте + обновление через потоки для обработки в реал тайме
     processed_lots = set()
@@ -499,13 +543,10 @@ threading.Thread(target=my, daemon=True).start()
     while True:
         t = db.lotTime()
         dt_now = datetime.now()
-        print(len(t), t)
         if len(t) == 1:
             t1 = datetime.strptime(t[0][1], '%Y-%m-%d %H:%M')
-            if  dt_now > t1:       
-                print(t[0][0])
+            if dt_now > t1:
                 p = db.history(t[0][0])
-                print(p)
         
                 bot.send_message(p[3], f"Вы выйграли в ставках на лот № {t[0][0]}")
         #
