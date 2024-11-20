@@ -517,7 +517,7 @@ class Database:
                                     SET balance = {newBalance}
                                     WHERE admin_id = {id} """)
         
-    def add_delete(self, n, u, newBalance, id):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
+    def add_delete(self, n, u, newBalance = None, id = None):  # t - индекс товара по выделенной ячейки; u - номер нажатой кнопки
         if u == 8:
             dt_now = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
             with sql.connect(db_path) as self.con:
@@ -529,6 +529,9 @@ class Database:
                 self.con.execute(f"""UPDATE Admins
                                     SET balance = '{newBalance}'
                                     WHERE admin_id = {id} """)
+                
+                self.con.execute(f"""DELETE FROM Bids  
+                                    WHERE lot_id = {n}""")  # Удаляем строчку по индексу чс базы данных                
                 
         elif u == 11:
             dt_now = (datetime.datetime.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M')
@@ -801,7 +804,32 @@ class Database:
             self.con.execute(f"""UPDATE Users
                                         SET balance = '{bal}'
                                         WHERE user_id = {id}""")  # Редактируем данные ячейки
+    
+    # Отменяем последнюю ставку 
+    def cancelBid_db(self, id):
+        with sql.connect(db_path) as self.con:
+            bet = self.con.execute(f"""SELECT max(bid_amount) FROM Bids
+                                            WHERE lot_id = {id}""")
+            bet = bet.fetchall()[0][0]
+            if bet != None:
+                self.con.execute(f"""DELETE FROM Bids  
+                                    WHERE lot_id = {id} and bid_amount = {bet}""")  # Удаляем строчку по индексу чс базы данных
+                
+    # Продлеваем определенным товаром время на торгах (После сбоя)
+    def bidsRecovery_db(self, startOfTimeRange , endOfTimeRange):
+        with sql.connect(db_path) as self.con:
+            bet = self.con.execute(f"""SELECT lot_id FROM Lots
+                                            WHERE end_time > '{startOfTimeRange}' AND end_time < '{endOfTimeRange}' """)
+            bet = bet.fetchall()
 
+            for id in bet:
+                dt_now  = datetime.datetime.now() # Узнаем какое время сейчас
+                end_time = dt_now  + datetime.timedelta(days=1) # Добавляем к текущему времени один день
+                end_time = end_time.strftime('%Y-%m-%d %H:%M') # Переводим время в строковый формат данного типа 
+                self.con.execute(f"""UPDATE Lots
+                                        SET end_time = '{end_time}'
+                                        WHERE lot_id = {id[0]}""")  # Редактируем данныеячейки
+            # 2024-10-30 09:00                 
         
 
 
@@ -814,7 +842,9 @@ class Database:
             
     def delete_qqqqqqq(self):
         with self.con:
-            self.con.execute(f"""DELETE FROM Auto_bids  
+            #self.con.execute(f"""DELETE FROM Auto_bids  """)
+            self.con.execute(f"""DELETE FROM Auction_history
+                                    WHERE lot_id = 10  
                                      """)
     
 db = Database()
@@ -919,4 +949,4 @@ data_db = {
 # db.fill_table(data_db)
 
 #db.add_auto_bids()
-# db.delete_qqqqqqq()
+#db.delete_qqqqqqq()

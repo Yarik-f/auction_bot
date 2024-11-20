@@ -2,12 +2,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 import functools, datetime
 
-import ИсторияТоргов, УдалениеТовара, user_admin_window, products_window, editMW, addingAndRemovingBalance
+import ИсторияТоргов, bidsRecovery, user_admin_window, products_window, editMW, addingAndRemovingBalance
 from DataBase.database import db
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, root = True, Information = (2, 'admin', 850, 2, 0)):
-    #def setupUi(self, MainWindow, root, Information):
+    #def setupUi(self, MainWindow, root = True, Information = (2, 'admin', 850, 2, 0)):
+    def setupUi(self, MainWindow, root, Information):
         self.name = Information[1]
         self.Information = Information
         self.MainWindow = MainWindow
@@ -135,7 +135,15 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(12)
         self.pushButton_9.setFont(font)
-        self.pushButton_9.setObjectName("pushButton_8")
+        self.pushButton_9.setObjectName("pushButton_9")
+        self.pushButton_12 = QtWidgets.QPushButton(self.tab)
+        self.pushButton_12.setGeometry(QtCore.QRect(150, 650, 220, 40))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_12.setFont(font)
+        self.pushButton_12.setToolTip("")
+        self.pushButton_12.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.pushButton_12.setObjectName("pushButton_12")
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
@@ -186,6 +194,14 @@ class Ui_MainWindow(object):
         self.pushButton_11.setToolTip("")
         self.pushButton_11.setInputMethodHints(QtCore.Qt.ImhNone)
         self.pushButton_11.setObjectName("pushButton_11")
+        self.pushButton_13 = QtWidgets.QPushButton(self.tab_2)
+        self.pushButton_13.setGeometry(QtCore.QRect(150, 640, 220, 50))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_13.setFont(font)
+        self.pushButton_13.setToolTip("")
+        self.pushButton_13.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.pushButton_13.setObjectName("pushButton_13")
         self.tabWidget.addTab(self.tab_2, "")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -199,22 +215,20 @@ class Ui_MainWindow(object):
         self.tableWidget.itemSelectionChanged.connect(self.EditingBlock)
         self.tableWidget_2.itemSelectionChanged.connect(self.EditingBlock_2)
         
-        self.r = []
         self.pushButton_3.clicked.connect(functools.partial(self.ИТ))
         self.pushButton_4.clicked.connect(functools.partial(self.products_window))
         self.pushButton_5.setVisible(root)
         self.pushButton_5.clicked.connect(functools.partial(self.UA))
         self.pushButton_6.clicked.connect(self.topUpBalance)
         self.pushButton_7.clicked.connect(self.withdrawMoney)
-        self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 
-                                                            'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )',
-                                                            self.r, 8))
+        self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 8))
         self.pushButton_9.clicked.connect(functools.partial(self.editMWT1, 'editMWT1'))
         self.pushButton_10.clicked.connect(functools.partial(self.editMWT2, 'editMWT2'))
-        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?', self.r, 11 ))
-        
-        self.tableWidget.itemSelectionChanged.connect(functools.partial(self.click_of_table, 1))
-        self.tableWidget_2.itemSelectionChanged.connect(functools.partial(self.click_of_table, 2))
+        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 11 ))
+        self.pushButton_12.setVisible(root)
+        self.pushButton_12.clicked.connect(self.cancelBid)
+        self.pushButton_13.setVisible(root)
+        self.pushButton_13.clicked.connect(self.bidsRecovery)
 
         self.radioButton.clicked.connect(self.myProducts)
         
@@ -276,6 +290,8 @@ class Ui_MainWindow(object):
         self.pushButton_10.setText(_translate("MainWindow", "Редактировать"))
         self.pushButton_11.setText(_translate("MainWindow", "Выставить выделеный \n"
                                                             "тавар на торги вновь"))
+        self.pushButton_12.setText(_translate("MainWindow", "Отменить ставку"))
+        self.pushButton_13.setText(_translate("MainWindow", "Восстановить ставки"))
         self.tableWidget.resizeColumnsToContents()
         self.tableWidget_2.resizeColumnsToContents()
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
@@ -337,19 +353,24 @@ class Ui_MainWindow(object):
             self.label_2.setWordWrap(True)
         else:
             self.auction()
-
-    #Отслеживаем нажатые ячейки 
-    def click_of_table(self, n):
-        if n == 1:
-            if self.tableWidget.currentRow() != -1:
-                self.r.clear()
+    
+    # Отменяем последнюю ставку на определённый  лот  
+    def cancelBid(self):
+        if self.tableWidget.currentRow() != -1:   
+            answer = QMessageBox.question(self.MainWindow, 'Запрос', 'Вы действительно хотите удалить последнюю ставку', 
+                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) #
+            if answer == QMessageBox.StandardButton.Yes: # Определяем согласен пользователь с данными условиями или нет       
                 row = self.tableWidget.currentRow() # Номер строки
-                self.r.append(self.tableWidget.item(row, 0).text())
-        elif n == 2:
-            if self.tableWidget_2.currentRow() != -1:
-                self.r.clear()
-                row = self.tableWidget_2.currentRow() # Номер строки
-                self.r.append(self.tableWidget_2.item(row, 0).text())
+                cellText0 = (self.tableWidget.item(row, 0).text()) # Определяем содержимое ячейки
+                cellText4 = (self.tableWidget.item(row, 4).text()) # Определяем содержимое ячейки
+                if cellText4 != '-': # Определяем была ли ставка на данный товар       
+                    db.cancelBid_db(cellText0) # Удаляем последнюю ставку на данный товар        
+                else:
+                    QMessageBox.warning(self.MainWindow, "Запрет к редактированию!!!", "На этот товар еще не было ставок!!!") 
+        if self.radioButton.isChecked() == True:
+            self.myProducts()
+        else:
+            self.auction()
 
     # Редактировании верхней таблицы 
     def editMWT1(self, k):
@@ -517,6 +538,17 @@ class Ui_MainWindow(object):
             else:
                 self.auction()
     
+    def bidsRecovery(self):
+        Dialog = QtWidgets.QDialog()
+        ui = bidsRecovery.Ui_Dialog()
+        ui.setupUi(Dialog)
+        result = Dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            if self.radioButton.isChecked() == True:
+                self.myProducts()
+            else:
+                self.auction()
+    
     # Пополнения счета администратора через главную страницу
     def topUpBalance(self):
         Dialog = QtWidgets.QDialog()
@@ -540,7 +572,61 @@ class Ui_MainWindow(object):
             else:
                 self.auction()
 
-    def Confirmation(self, n, t, u):
+    def Confirmation(self, u):
+        if u == 8:
+            row = self.tableWidget.currentRow() # Номер строки
+            if self.tableWidget.currentRow() != -1:
+                te = self.tableWidget.item(row, 7).text() # Определяем текст ячейки 
+                if te == self.name:
+                    if self.tableWidget.item(row, 4).text() != '-':
+                        if float(self.tableWidget.item(row, 3).text()) > float(self.tableWidget.item(row, 4).text()):
+                            loss = float(self.tableWidget.item(row, 3).text()) * 0.05
+                            newBalance = db.adminBalance_db(self.Information[0]) - loss
+                        else:
+                            loss = float(self.tableWidget.item(row, 4).text()) * 0.05
+                            newBalance = db.adminBalance_db(self.Information[0]) - loss
+                    else:
+                        loss = float(self.tableWidget.item(row, 3).text()) * 0.05
+                        newBalance = db.adminBalance_db(self.Information[0]) - loss
+                    if newBalance >= 0:
+                        answer = QMessageBox.question(self.MainWindow, 'Запрос', 'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )', 
+                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) #
+                        if answer == QMessageBox.StandardButton.Yes: # Определяем согласен пользователь с данными условиями или нет    
+                            db.add_delete(self.tableWidget.item(row, 0).text(), u, newBalance, self.Information[0])        
+                    else:
+                        QMessageBox.warning(self.MainWindow, "Ошибка", "Для отмены заказа недостаточно средств!!!")
+                else:
+                    QMessageBox.warning(self.MainWindow, "Ошибка", "Удалять товар с торгов допускается только тот который выставили вы!!!")
+        else:
+            row = self.tableWidget_2.currentRow() # Номер строки
+            if self.tableWidget_2.currentRow() != -1:
+                te = self.tableWidget_2.item(row, 4).text()# Определяем текст строки 
+                if te == '-':
+                    answer = QMessageBox.question(self.MainWindow, 'Запрос', 'Вы действительно хотите выставить данный товар на аукцион ?', 
+                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) #
+                    if answer == QMessageBox.StandardButton.Yes: # Определяем согласен пользователь с данными условиями или нет       
+                            db.add_delete(self.tableWidget_2.item(row, 0).text(), u)
+                else:
+                    QMessageBox.warning(self.MainWindow, "Ошибка", "Выставить можно только тот товар который не был продан")
+
+        if self.radioButton.isChecked() == True:
+            self.myProducts()
+        else:
+            self.auction()
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    ui.auction()
+    MainWindow.show()
+    sys.exit(app.exec_())
+
+
+""" 
+def Confirmation(self, n, t, u):
         if u == 8:
             row = self.tableWidget.currentRow() # Номер строки
             if self.tableWidget.currentRow() != -1:
@@ -587,18 +673,15 @@ class Ui_MainWindow(object):
                 else:
                     QMessageBox.warning(self.MainWindow, "Ошибка", "Выставить можно только тот товар который не был продан")
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    ui.auction()
-    MainWindow.show()
-    sys.exit(app.exec_())
+     self.pushButton_8.clicked.connect(functools.partial(self.Confirmation, 
+                                                            'Вы действительно хотите удалить товар из аукциона? (при удалении товара произойдёт списания 5% от текущей стоимости товара )',
+                                                            self.r, 8))
+        self.pushButton_11.clicked.connect(functools.partial(self.Confirmation, 'Вы действительно хотите выставить данный товар на аукцион ?', self.r, 11 ))
 
 
-""" self.MainWindow = MainWindow
+
+
+self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1350, 930)
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
